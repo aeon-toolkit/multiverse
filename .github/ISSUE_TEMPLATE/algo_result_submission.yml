@@ -1,0 +1,25 @@
+name: Algorithm result submission
+description: Submit results for the leaderboard (prefer a PR with files under results/submitted/)
+title: "[Results] <algorithm> on <version>"
+labels: ["results"]
+body:
+  - type: input
+    id: algorithm
+    attributes:
+      label: Algorithm name
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Multiverse version
+      placeholder: "multiverse-v1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Link to PR, or describe where results files are placed and the evaluation regime used.
+    validations:
+      required: true

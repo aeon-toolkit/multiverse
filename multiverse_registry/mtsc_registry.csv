@@ -1,0 +1,3 @@
+dataset,zenodo_record_id,artifact_path,sha256,format,notes,licence,source,citation
+BasicMotions,REPLACE_ME,BasicMotions.zip,REPLACE_ME,tszip,UEA MTSC classic,CC-BY-4.0,REPLACE_ME,REPLACE_ME
+NATOPS,REPLACE_ME,NATOPS.zip,REPLACE_ME,tszip,UEA MTSC classic,CC-BY-4.0,REPLACE_ME,REPLACE_ME

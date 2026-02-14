@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use the Multiverse Archive, please cite it."
+title: "Multiverse Archive (MTSC)"
+type: software
+authors:
+  - given-names: "Tony"
+    family-names: "Bagnall"
+  - given-names: "Multiverse"
+    family-names: "Archive Contributors"
+year: 2026
+license: "BSD-3-Clause"
+repository-code: "https://github.com/<ORG>/<REPO>"

@@ -1,0 +1,53 @@
+name: Validate results submissions
+
+on:
+  pull_request:
+    paths:
+      - "results/submitted/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install validator deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pandas
+      - name: Validate metrics schema
+        run: |
+          python - << 'PY'
+          from pathlib import Path
+          import pandas as pd
+          import json
+
+          required_cols = {"dataset", "metric", "score", "split"}
+
+          root = Path("results/submitted")
+          for metrics in root.rglob("metrics.csv"):
+              df = pd.read_csv(metrics)
+              missing = required_cols - set(df.columns)
+              if missing:
+                  raise SystemExit(f"{metrics}: missing columns {sorted(missing)}")
+
+              # Basic types
+              try:
+                  df["score"].astype(float)
+              except Exception as e:
+                  raise SystemExit(f"{metrics}: score column not numeric: {e}")
+
+              meta = metrics.with_name("run-metadata.json")
+              if not meta.exists():
+                  raise SystemExit(f"{metrics}: missing run-metadata.json")
+
+              with meta.open("r", encoding="utf-8") as f:
+                  j = json.load(f)
+              for k in ["algorithm", "archive_version", "evaluation_regime", "software", "hardware", "command", "git_commit"]:
+                  if k not in j:
+                      raise SystemExit(f"{meta}: missing key '{k}'")
+
+          print("All result submissions validated.")
+          PY

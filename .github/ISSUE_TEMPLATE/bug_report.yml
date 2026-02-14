@@ -1,0 +1,19 @@
+name: Bug report
+description: Report a bug in loaders, scripts, or documentation
+title: "[Bug] <short description>"
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: Include error messages and steps to reproduce.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, OS, and relevant package versions.
+    validations:
+      required: false

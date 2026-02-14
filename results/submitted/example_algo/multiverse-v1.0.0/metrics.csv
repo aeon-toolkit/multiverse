@@ -1,0 +1,3 @@
+dataset,metric,score,split,notes
+BasicMotions,accuracy,0.975,test,example submission on default split
+NATOPS,accuracy,0.910,test,example submission on default split

@@ -1,0 +1,19 @@
+name: Dataset request
+description: Request a dataset addition or fix
+title: "[Dataset] <name>"
+labels: ["dataset"]
+body:
+  - type: input
+    id: dataset_name
+    attributes:
+      label: Dataset name
+      placeholder: "ExampleDataset"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Provide provenance, licence, and suggested Zenodo packaging if applicable.
+    validations:
+      required: true
