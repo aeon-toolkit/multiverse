@@ -1,7 +1,12 @@
+"""
+aeon is a scikit learn compatible toolkit for time series machine learning.
+It has a
+
+"""
 from __future__ import annotations
 
 from aeon.classification.interval_based import TimeSeriesForestClassifier
-from multiverse.datasets import list_datasets, load_dataset
+from aeon.datasets import multiverse_mini
 
 
 def main():
