@@ -1,7 +1,18 @@
-<img src="img/multiverse3.png" alt="Multiverse" width="100%">
-## Welcome to the Multiverse 
-<img src="img/multiverse4.png" alt="Multiverse" width="100%">
+<table>
+  <tr>
+    <td width="25%" align="center" valign="middle">
+      <img src="img/multiverse3.png" alt="Multiverse" width="100%">
+    </td>
 
+    <td width="50%" align="center" valign="middle">
+      <h1>Welcome to the Multiverse</h1>
+    </td>
+
+    <td width="25%" align="center" valign="middle">
+      <img src="img/multiverse4.png" alt="Multiverse" width="100%">
+    </td>
+  </tr>
+</table>
 
 <p align="center">
   <strong>The archive and benchmark repository for multivariate time series classification.</strong>
