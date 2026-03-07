@@ -22,10 +22,6 @@
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
----
-
-## Welcome to the Multiverse
-
 **Multiverse** is a repository for accessing, benchmarking, and extending the new archive for **multivariate time series classification**.
 
 It brings together datasets, published results, reproducible evaluation workflows, and leaderboard infrastructure in one place. The aim is to make it easier to:
