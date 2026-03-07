@@ -13,7 +13,7 @@
 <p align="center">
   <a href="leaderboards/leaderboard.md">Leaderboard</a>
   ·
-  <a href="docs/index.md">Documentation</a>
+  <a href="docs/datasets.md">Datasets</a>
   ·
   <a href="results/README.md">Results</a>
   ·
