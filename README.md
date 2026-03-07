@@ -1,8 +1,11 @@
 # Multiverse
 
 <p align="center">
-  <img src="docs/images/multiverse-hero.png" alt="Multiverse hero image" width="100%">
+  <img src="img/multiverse3.png" alt="Multiverse" width="100%">
+Welcome to the Multiverse 
+  <img src="img/multiverse4.png" alt="Multiverse" width="100%">
 </p>
+
 
 <p align="center">
   <strong>The archive and benchmark repository for multivariate time series classification.</strong>
