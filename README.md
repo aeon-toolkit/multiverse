@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="leaderboards/leaderboard.md">Leaderboard</a>
+  <a href="docs/leaderboard.md">Leaderboard</a>
   ·
   <a href="docs/datasets.md">Datasets</a>
   ·
-  <a href="results/README.md">Results</a>
+  <a href="docs/results.md">Results</a>
   ·
-  <a href="CONTRIBUTING.md">Contributing</a>
+  <a href="docs/classifiers.md">Classifiers</a>
 </p>
 
 **The Multiverse** is a new archive of multivariate time series classification datasets.
