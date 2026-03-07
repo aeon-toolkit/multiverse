@@ -1,16 +1,8 @@
 <table>
   <tr>
-    <td width="25%" align="center" valign="middle">
-      <img src="img/multiverse3.png" alt="Multiverse" width="100%">
-    </td>
-
-    <td width="50%" align="center" valign="middle">
-      <h1>Welcome to the Multiverse</h1>
-    </td>
-
-    <td width="25%" align="center" valign="middle">
-      <img src="img/multiverse4.png" alt="Multiverse" width="100%">
-    </td>
+    <td width="25%" align="center"><img src="img/multiverse3.png" width="100%"></td>
+    <td width="50%" align="center"><h1>Welcome to the Multiverse</h1></td>
+    <td width="25%" align="center"><img src="img/multiverse4.png" width="100%"></td>
   </tr>
 </table>
 
