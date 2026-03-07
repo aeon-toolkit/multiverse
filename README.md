@@ -1,10 +1,6 @@
-# Multiverse
-
-<p align="center">
-  <img src="img/multiverse3.png" alt="Multiverse" width="100%">
-Welcome to the Multiverse 
-  <img src="img/multiverse4.png" alt="Multiverse" width="100%">
-</p>
+<img src="img/multiverse3.png" alt="Multiverse" width="100%">
+## Welcome to the Multiverse 
+<img src="img/multiverse4.png" alt="Multiverse" width="100%">
 
 
 <p align="center">
