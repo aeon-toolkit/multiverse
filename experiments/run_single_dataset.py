@@ -2,18 +2,16 @@ from __future__ import annotations
 
 import argparse
 from aeon.classification.interval_based import TimeSeriesForestClassifier
-from multiverse.datasets import load_dataset
+from aeon.datasets import load_classificiation
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", required=True)
-    args = ap.parse_args()
+def single_experiment():
+    dataset = "ChinaTown"
 
-    X_train, y_train = load_dataset(args.dataset, "train")
-    X_test, y_test = load_dataset(args.dataset, "test")
+    X_train, y_train = load_classificiation(dataset, split="train")
+    X_test, y_test = load_classificiation(dataset, split= "test")
 
-    clf = TimeSeriesForestClassifier(n_estimators=200, random_state=0)
+    clf = TimeSeriesForestClassifier(n_estimators=20, random_state=0)
     clf.fit(X_train, y_train)
     acc = clf.score(X_test, y_test)
     print(f"{args.dataset} accuracy={acc:.4f}")
