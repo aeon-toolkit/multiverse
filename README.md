@@ -15,9 +15,7 @@
   ·
   <a href="docs/index.md">Documentation</a>
   ·
-  <a href="multiverse_registry/README.md">Dataset registry</a>
-  ·
-  <a href="results/README.md">Results format</a>
+  <a href="results/README.md">Results</a>
   ·
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
