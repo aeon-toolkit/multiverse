@@ -38,35 +38,78 @@ It brings together datasets, published results, reproducible evaluation workflow
 - and <a href="docs/contributing.md">contribute</a> new algorithms and results back to 
   the archive.
 
-This repository is intended as both a practical resource for researchers and a public record of benchmark results.
+This repository is intended as both a practical resource for researchers and a 
+public record of benchmark results.
 
 ---
 ### Top of the league
 
 Places 1 to 5 by ranks
 
-## Quick start
+Further information and more extensive leaderboard views linked here:
+
+- [`docs/leaderboard.md`](leaderboards/leaderboard.md)
+
+## Install package
+
+Install the release package from PyPI:
+
+```bash
+pip install aeon-multiverse
+```
+or install the development version from GitHub:
+
+```bash
+pip install git+https://github.com/aeon-toolkit/multiverse.git
+```
 
 ### Load a dataset
-Use the examples in [`examples/aeon_quickstart.py`](examples/aeon_quickstart.py) as a starting point for downloading and loading Multiverse datasets.
+
+Use ``aeon`` to download data from zenodo and load into memory.
+
+```python
+from aeon.datasets import load_classification
+X, y = load_classification("BasicMotions")
+print(X.shape)
+print(y[:10])
+trainX, trainy = load_classification("BasicMotions", split="train")
+testX, testy = load_classification("BasicMotions", split="test")
+
+```
+
+More info and links to code - [`docs/leaderboard.md`](docs/leaderboard.md)
+
+### Train and test a classifier
+Train and test any aeon classifier that can 
+```python
+from aeon.classification.deep_learning import InceptionTimeClassifier
+from multiverse.classification import TimesNet
+
+clf = InceptionTimeClassifier()
+clf.fit(X, y)
+preds = clf.predict(X)
+```
+More info and links to aeon classifiers - [`docs/classifiers.md`](docs/classifiers.md)
+Multiverse ported classifiers - [`multiverse/classification`](multiverse/classification)
+
+### Compare your results to published results
+Load results directly in code
+```python
+from aeon.classification.deep_learning import InceptionTimeClassifier
+```
+Or explore published results explored in this repo - [`docs/results.md`]
+(docs/results.md)
 
 ### Run an experiment
 To reproduce a benchmark run or evaluate a new classifier, start from:
 
+
 - [`experiments/run_single_dataset.py`](experiments/run_single_dataset.py)
 - [`experiments/run_benchmark.py`](experiments/run_benchmark.py)
 
-### Explore the results
-Browse the generated leaderboard views in:
-
-- [`leaderboards/leaderboard.md`](leaderboards/leaderboard.md)
-
 ### Donate your code and published results
 
-For submission layout and result schema, see:
-
-- [`results/README.md`](results/README.md)
-- [`results/schema.md`](results/schema.md)
+Coming soon
 
 ---
 
@@ -77,4 +120,4 @@ multiverse/
 ├── docs/                  # Documentation
 ├── experiments/           # Benchmark and reproduction scripts
 ├── results/               # Submitted results and schema
-└── src/                   # Python package source for classifiers
+└── multiverse/            # Python package source for classifiers
