@@ -17,7 +17,7 @@
   ·
   <a href="docs/leaderboard.md">Leaderboard</a>
   ·
-  <a href="docs/experiments.md">Experiments</a>
+  <a href="docs/evaluation.md">Evaluation</a>
   ·
   <a href="docs/classifiers.md">Classifiers</a>
   ·
@@ -29,10 +29,11 @@ This repository is for accessing, benchmarking, and extending this new archive.
 
 It brings together datasets, published results, reproducible evaluation workflows, and leaderboard infrastructure in one place. The aim is to make it easier to:
 
-- access benchmark datasets for <a href="docs/datasets.md"> multivariate time series 
-  classification</a>,
-- load data into Python workflows,
-- explore and compare against <a href="docs/results.md">published results</a>,
+- access the <a href="docs/datasets.md"> multiverse </a>, a collection of benchmark 
+  datasets for  multivariate time series 
+  classification,
+- explore and compare against <a href="docs/results.md">published results</a> of 
+  classification algorithms,
 - reproduce baseline <a href="docs/experiments.md"> experiments</a>,
 - evaluate <a href="docs/classifiers.md">new classifiers consistently</a>,
 - and <a href="docs/contributing.md">contribute</a> new algorithms and results back to 
