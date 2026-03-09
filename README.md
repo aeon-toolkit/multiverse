@@ -17,7 +17,7 @@
   ·
   <a href="docs/leaderboard.md">Leaderboard</a>
   ·
-  <a href="docs/experiments.md">Experiments</a>
+  <a href="docs/evaluation.md">Evaluation</a>
   ·
   <a href="docs/classifiers.md">Classifiers</a>
   ·
