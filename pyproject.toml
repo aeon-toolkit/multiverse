@@ -10,10 +10,38 @@ authors = [
 maintainers = [
     {name = "aeon developers", email = "contact@aeon-toolkit.org"},
 ]
-version = "0.1.0"
+version = "0.0.1"
 description = "Multiverse Archive loaders and utilities for MTSC benchmarks."
 readme = "README.md"
+keywords = [
+    "aeon-toolkit",
+    "data-science",
+    "machine-learning",
+    "data-mining",
+    "time-series",
+    "scikit-learn",
+    "multivariate-time-series-classification",
+    "time-series-clustering",
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 requires-python = ">=3.10"
+license = {file = "LICENSE"}
 dependencies = [
   "numpy>=1.23",
   "pandas>=2.0",
@@ -32,6 +60,3 @@ multiverse = ["datasets/mtsc_registry.csv"]
 Homepage = "https://github.com/aeon-toolkit/multiverse"
 Repository = "https://github.com/aeon-toolkit/multiverse"
 Issues = "https://github.com/aeon-toolkit/multiverse/issues"
-
-[project.license]
-file = "LICENSE"
