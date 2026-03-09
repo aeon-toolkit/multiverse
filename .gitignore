@@ -1,11 +1,22 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.so
+
+# Packaging / build
+build/
+dist/
 *.egg-info/
+pip-wheel-metadata/
+
+# Testing / tooling
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 
 # Virtualenv
 .venv/
@@ -14,6 +25,10 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# IDE
+.idea/
+*.iml
 
 # OS
 .DS_Store
