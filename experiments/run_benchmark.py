@@ -6,28 +6,20 @@ from pathlib import Path
 import time
 
 import pandas as pd
-from aeon.classification.interval_based import TimeSeriesForestClassifier
+from aeon.classification.convolution_based import RocketClassifier
 
-from multiverse.datasets import list_datasets, load_dataset
+from aeon.datasets import load_classification
+from aeon.datasets.tsc_datasets import multivariate_equal_length
 
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--datasets", default="all", help="Comma-separated list, or 'all'")
-    ap.add_argument("--out", default="benchmark_results.csv")
-    args = ap.parse_args()
-
-    if args.datasets.strip().lower() == "all":
-        datasets = list_datasets()
-    else:
-        datasets = [d.strip() for d in args.datasets.split(",") if d.strip()]
-
+def experiment_example():
+    datasets = ["BasicMotions"]
     rows = []
     for name in datasets:
-        X_train, y_train = load_dataset(name, "train")
-        X_test, y_test = load_dataset(name, "test")
+        X_train, y_train = load_classification(name, "train")
+        X_test, y_test = load_classification(name, "test")
 
-        clf = TimeSeriesForestClassifier(n_estimators=200, random_state=0)
+        clf = RocketClassifier(n_kernels=500, random_state=0)
+
 
         t0 = time.time()
         clf.fit(X_train, y_train)
@@ -52,4 +44,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    experiment_example()
