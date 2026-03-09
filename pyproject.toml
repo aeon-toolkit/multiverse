@@ -3,7 +3,13 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "multiverse-archive"
+name = "multiverse"
+authors = [
+    {name = "aeon developers", email = "contact@aeon-toolkit.org"},
+]
+maintainers = [
+    {name = "aeon developers", email = "contact@aeon-toolkit.org"},
+]
 version = "0.1.0"
 description = "Multiverse Archive loaders and utilities for MTSC benchmarks."
 readme = "README.md"
@@ -23,4 +29,9 @@ package-dir = {"" = "src"}
 multiverse = ["datasets/mtsc_registry.csv"]
 
 [project.urls]
-Homepage = "https://github.com/<ORG>/<REPO>"
+Homepage = "https://github.com/aeon-toolkit/multiverse"
+Repository = "https://github.com/aeon-toolkit/multiverse"
+Issues = "https://github.com/aeon-toolkit/multiverse/issues"
+
+[project.license]
+file = "LICENSE"
