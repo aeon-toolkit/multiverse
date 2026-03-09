@@ -11,15 +11,17 @@
 </p>
 
 <p align="center">
-  <a href="docs/leaderboard.md">Leaderboard</a>
-  ·
   <a href="docs/datasets.md">Datasets</a>
   ·
   <a href="docs/results.md">Results</a>
   ·
-  <a href="docs/classifiers.md">Classifiers</a>
+  <a href="docs/leaderboard.md">Leaderboard</a>
   ·
   <a href="docs/experiments.md">Experiments</a>
+  ·
+  <a href="docs/classifiers.md">Classifiers</a>
+  ·
+  <a href="docs/contributing.md">Contributing</a>
 </p>
 
 **The Multiverse** is a new archive of multivariate time series classification datasets.
@@ -27,12 +29,14 @@ This repository is for accessing, benchmarking, and extending this new archive.
 
 It brings together datasets, published results, reproducible evaluation workflows, and leaderboard infrastructure in one place. The aim is to make it easier to:
 
-- access benchmark datasets,
+- access benchmark datasets for <a href="docs/datasets.md"> multivariate time series 
+  classification</a>,
 - load data into Python workflows,
-- compare against published results,
-- reproduce baseline experiments,
-- evaluate new classifiers consistently,
-- and contribute new methods back to the archive.
+- explore and compare against <a href="docs/results.md">published results</a>,
+- reproduce baseline <a href="docs/experiments.md"> experiments</a>,
+- evaluate <a href="docs/classifiers.md">new classifiers consistently</a>,
+- and <a href="docs/contributing.md">contribute</a> new algorithms and results back to 
+  the archive.
 
 This repository is intended as both a practical resource for researchers and a public record of benchmark results.
 
