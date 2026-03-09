@@ -43,8 +43,18 @@ testX,testy = load_classification("BasicMotions", split="test")
 ```
 Equal length datasets are stored in 3D numpy arrays of shape ``(n_cases, n_channels, n_timepoints)``.
 Note this is different to some other packages which assume a single time series is shape
-``(n_timepoints, n_channels)``
-So if you are not using aeon you may need to reshape it. Unequal length datasets are stored in 
+``(n_timepoints, n_channels)`` so if you are not using aeon you may need to reshape it. 
+
+To use ``sklearn`` classifiers directly on multivariate equal length datasets, one option is to flatten
+the data so that the 3D array `(n_cases, n_channels, n_timepoints)` becomes a 2D array
+of shape `(n_cases, n_channels*n_timepoints)`.
+
+```python
+flatTrainX = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
+flatTestX = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
+
+```
+Unequal length datasets are stored in 
 a list of 2D numpy arrays. You can control whether to load the equal length version with the 
 parameter ``equal_length``.
 
@@ -57,4 +67,5 @@ You can download whole archives from zenodo or in code
 from aeon.classification import load_classification
 ```
 There are lists of datasets in aeon and a dictionary of all zenodo keys.
+
 

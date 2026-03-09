@@ -1,9 +1,10 @@
-# Leaderboard rules
+# Leaderboards
 
-See `results/schema.md` and `leaderboards/README.md`.
+The leaderboards can be interactively generated on the WEBSITE.
 
-Recommended minimum:
-- fixed archive version
-- fixed evaluation regime
-- pinned software versions
-- no test-set tuning
+## Multiverse-mini
+
+
+## EEG archive
+
+

@@ -18,6 +18,8 @@
   <a href="docs/results.md">Results</a>
   ·
   <a href="docs/classifiers.md">Classifiers</a>
+  ·
+  <a href="docs/experiments.md">Experiments</a>
 </p>
 
 **The Multiverse** is a new archive of multivariate time series classification datasets.
@@ -35,61 +37,9 @@ It brings together datasets, published results, reproducible evaluation workflow
 This repository is intended as both a practical resource for researchers and a public record of benchmark results.
 
 ---
+### Top of the league
 
-## What is in this repository?
-
-### 1. Leaderboards
-Static leaderboard views for Multiverse sub-archives, with links to richer interactive views where available.
-
-Current entry points include:
-
-- **Main leaderboard**: `leaderboards/leaderboard.md`
-- **Multiverse Mini**: *placeholder link*
-- **Multivariate EEG leaderboard**: *placeholder link*
-
-### 2. Code examples
-Examples showing how to:
-
-- download datasets and load them into memory,
-- download published results and compare classifiers,
-- run benchmark experiments,
-- assess a new classifier on a selected archive,
-- prepare and submit results to the archive.
-
-Useful starting points:
-
-- `examples/aeon_quickstart.py`
-- `experiments/run_single_dataset.py`
-- `experiments/run_benchmark.py`
-
-### 3. Documentation
-Guidance on data access, evaluation, leaderboards, and repository structure.
-
-See:
-
-- `docs/index.md`
-- `docs/datasets.md`
-- `docs/loading.md`
-- `docs/evaluation.md`
-- `docs/leaderboard.md`
-
-### 4. Dataset registry
-The authoritative registry of datasets and metadata used by the archive.
-
-See:
-
-- `multiverse_registry/mtsc_registry.csv`
-- `multiverse_registry/README.md`
-
-### 5. Submitted results
-A standard structure for storing submitted benchmark results and metadata.
-
-See:
-
-- `results/README.md`
-- `results/schema.md`
-
----
+Places 1 to 5 by ranks
 
 ## Quick start
 
@@ -107,6 +57,8 @@ Browse the generated leaderboard views in:
 
 - [`leaderboards/leaderboard.md`](leaderboards/leaderboard.md)
 
+### Donate your code and published results
+
 For submission layout and result schema, see:
 
 - [`results/README.md`](results/README.md)
@@ -119,9 +71,6 @@ For submission layout and result schema, see:
 ```text
 multiverse/
 ├── docs/                  # Documentation
-├── examples/              # Minimal usage examples
 ├── experiments/           # Benchmark and reproduction scripts
-├── leaderboards/          # Leaderboard generation and published views
-├── multiverse_registry/   # Dataset registry and metadata
 ├── results/               # Submitted results and schema
-└── src/                   # Python package source
+└── src/                   # Python package source for classifiers
