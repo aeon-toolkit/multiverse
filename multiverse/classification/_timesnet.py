@@ -433,7 +433,7 @@ class TimesNetClassifier(BaseClassifier):
                 f"seq_len={self.seq_len_}."
             )
 
-        x_t, mask = self._convert_X(X)
+        x_t, mask = self.convert_X(X)
 
         if self.scaler_ is not None:
             x_t = self.scaler_.transform(x_t)
