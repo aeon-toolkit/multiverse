@@ -297,7 +297,7 @@ class TimesNetClassifier(BaseClassifier):
                 "X.shape[2] to match seq_len."
             )
 
-        x_t, mask = self._convert_X(X)
+        x_t, mask = self.convert_X(X)
 
         if self.standardise:
             self.scaler_ = _StandardisePerChannel().fit(x_t)
