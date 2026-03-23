@@ -44,11 +44,13 @@ classifiers = [
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
 dependencies = [
-  "numpy>=1.23",
-  "pandas>=2.0",
-  "requests>=2.31",
-  "tqdm>=4.66",
-  "aeon>=1.2",
+    "numpy>=1.23",
+    "pandas>=2.0",
+    "requests>=2.31",
+    "tqdm>=4.66",
+    "aeon>=1.4",
+    "tsml_eval>=0.0",
+    "aeon_neuro>=0.1",
 ]
 
 [tool.setuptools.packages.find]
