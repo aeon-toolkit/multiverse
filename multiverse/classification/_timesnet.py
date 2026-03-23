@@ -184,7 +184,8 @@ class TimesNetClassifier(BaseClassifier):
             return torch.device(self.device)
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def _convert_X(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    @staticmethod
+    def convert_X(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Convert aeon numpy3D input to TimesNet layout and create a mask.
 
