@@ -18,4 +18,4 @@ def single_experiment():
 
 
 if __name__ == "__main__":
-    main()
+    single_experiment()
