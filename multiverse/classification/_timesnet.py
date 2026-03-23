@@ -184,7 +184,8 @@ class TimesNetClassifier(BaseClassifier):
             return torch.device(self.device)
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def _convert_X(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    @staticmethod
+    def _preprocess_X(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Convert aeon numpy3D input to TimesNet layout and create a mask.
 
@@ -296,7 +297,7 @@ class TimesNetClassifier(BaseClassifier):
                 "X.shape[2] to match seq_len."
             )
 
-        x_t, mask = self._convert_X(X)
+        x_t, mask = self._preprocess_X(X)
 
         if self.standardise:
             self.scaler_ = _StandardisePerChannel().fit(x_t)
@@ -432,7 +433,7 @@ class TimesNetClassifier(BaseClassifier):
                 f"seq_len={self.seq_len_}."
             )
 
-        x_t, mask = self._convert_X(X)
+        x_t, mask = self._preprocess_X(X)
 
         if self.scaler_ is not None:
             x_t = self.scaler_.transform(x_t)
