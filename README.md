@@ -7,7 +7,27 @@
 </table>
 
 <p align="center">
-  <strong>The archive and benchmark repository for multivariate time series classification.</strong>
+  <strong>The Multiverse archive for multivariate time series classification.</strong>
+
+The **Multiverse** is an expanded archive for multivariate time series classification 
+(MTSC), together with supporting code, metadata, and benchmark results. It consolidates 
+datasets from the original UEA MTSC archive, newer MTSC collections, donated 
+standalone datasets, and associated benchmark results into a single open repository.
+
+The current paper version describes:
+
+- 133 unique MTSC problems
+- 147 released datasets when preprocessing variants are included
+- a curated 66 dataset subset, **Multiverse-core (MV-core)**, for algorithm benchmarking
+
+This repository aims to make it easier to:
+
+- load Multiverse datasets through `aeon`
+- inspect archive metadata and dataset variants
+- reproduce baseline benchmark results
+- compare against published and recreated results
+- contribute new results, metadata, and documentation as the archive evolves
+
 </p>
 
 <p align="center">
@@ -24,34 +44,36 @@
   <a href="docs/contributing.md">Contributing</a>
 </p>
 
-**The Multiverse** is a new archive of multivariate time series classification datasets.
-This repository is for accessing, benchmarking, and extending this new archive.
+## Installation
 
-It brings together datasets, published results, reproducible evaluation workflows, and leaderboard infrastructure in one place. The aim is to make it easier to:
+You can install from pip, 
 
-- access the <a href="docs/datasets.md"> multiverse </a>, a collection of benchmark 
-  datasets for  multivariate time series 
-  classification,
-- explore and compare against <a href="docs/results.md">published results</a> of 
-  classification algorithms,
-- reproduce baseline <a href="docs/experiments.md"> experiments</a>,
-- evaluate <a href="docs/classifiers.md">new classifiers consistently</a>,
-- and <a href="docs/contributing.md">contribute</a> new algorithms and results back to 
-  the archive.
 
-This repository is intended as both a practical resource for researchers and a 
-public record of benchmark results.
+```bash
+git clone https://github.com/aeon-toolkit/multiverse.git
+cd multiverse
+pip install -e .
+```
 
----
-### Top of the league
+but at present, the best route is to install from source, since it is changing rapidly.
 
-Places 1 to 5 by ranks
+This repository depends on `aeon` and uses the `aeon` dataset loading interface as 
+the main public API for archive access.
 
-Further information and more extensive leaderboard views linked here:
+## Quick start
 
-- [`docs/leaderboard.md`](leaderboards/leaderboard.md)
 
-## Install package
+At present, the safest route is to install from source.
+
+```bash
+git clone https://github.com/aeon-toolkit/multiverse.git
+cd multiverse
+pip install -e .
+```
+
+This repository depends on `aeon` and uses the `aeon` dataset loading interface as the main public API for archive access.
+
+## Quick start
 
 Install the release package from PyPI:
 
@@ -70,18 +92,18 @@ Use ``aeon`` to download data from zenodo and load into memory.
 
 ```python
 from aeon.datasets import load_classification
-X, y = load_classification("BasicMotions")
-print(X.shape)
-print(y[:10])
-trainX, trainy = load_classification("BasicMotions", split="train")
-testX, testy = load_classification("BasicMotions", split="test")
 
+X, y = load_classification("BasicMotions")
+train_X, train_y = load_classification("BasicMotions", split="train")
+test_X, test_y = load_classification("BasicMotions", split="test")
+
+print(X.shape)
 ```
 
-More info and links to code - [`docs/leaderboard.md`](docs/leaderboard.md)
+More info and links to code - [`docs/datasets.md`](docs/datasets.md)
 
 ### Train and test a classifier
-Train and test any aeon classifier that can 
+
 ```python
 from aeon.classification.deep_learning import InceptionTimeClassifier
 from multiverse.classification import TimesNet
@@ -97,9 +119,9 @@ Multiverse ported classifiers - [`multiverse/classification`](multiverse/classif
 Load results directly in code
 ```python
 from aeon.classification.deep_learning import InceptionTimeClassifier
+
 ```
-Or explore published results explored in this repo - [`docs/results.md`]
-(docs/results.md)
+Or explore published results explored in this repo - [`docs/results.md`](docs/results.md)
 
 ### Run an experiment
 To reproduce a benchmark run or evaluate a new classifier, start from:

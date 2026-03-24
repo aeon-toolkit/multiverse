@@ -1,7 +1,11 @@
-# Evaluation protocol
+# Experimental Protocols
 
-This is a placeholder. Decide and document:
-- default train-test split vs resampling policy
-- metrics (accuracy, balanced accuracy, macro F1, etc)
-- time and memory measurement policy
-- hyperparameter policy (global, per-dataset, tuned)
+There are many variations on how people structure experiments and a range of metrics 
+used in comparison. 
+
+The results we present are for the moment the simplest: we do all 
+training/validation on the default train split, and evaluate once on the test set.
+
+
+There are alternatives: we could perform stratified resamples or cross validate. 
+
