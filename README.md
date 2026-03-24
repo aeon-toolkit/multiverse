@@ -41,11 +41,6 @@ It brings together datasets, published results, reproducible evaluation workflow
 
 This repository is intended as both a practical resource for researchers and a public record of benchmark results.
 
----
-### Top of the league
-
-Places 1 to 5 by ranks
-
 ## Quick start
 
 ### Load a dataset
@@ -61,6 +56,13 @@ To reproduce a benchmark run or evaluate a new classifier, start from:
 Browse the generated leaderboard views in:
 
 - [`leaderboards/leaderboard.md`](leaderboards/leaderboard.md)
+
+
+### Top of the league
+
+Places 1 to 5 by ranks to come
+
+
 
 ### Donate your code and published results
 
