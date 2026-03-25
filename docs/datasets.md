@@ -69,14 +69,9 @@ download_archive(archive="UEA", extract_path="C:\\Temp\\")
 
 ```
 Currently should be one of "EEG","UCR","UEA","Imbalanced","TSR", "Unequal". See 
-``aeon`` documentation for more details. 
-There are lists of datasets in aeon and a dictionary of all zenodo keys.
+``aeon`` documentation for more details.  There are lists of datasets in aeon and a 
+dictionary of all zenodo keys.
 
 ```python
-
-from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026, eeg2026
-print(len(multiverse_core)) # 66
-print(len(multiverse2026)) # 133
-print(len(eeg2026))  # 28
-
+from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026, eeg2026, tsc_zenodo
 ```
