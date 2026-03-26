@@ -1,3 +1,9 @@
+THIS IS A WIP DRAFT FOR THE MULTIVERSE DATASETS AND LEADERBOARD.
+You can find the archive datasets on Zenodo here: https://zenodo.org/communities/tsml/records?q=&f=subject%3Auea%20archive&l=list&p=1&s=20&sort=newest
+---
+
+
+
 <table>
   <tr>
     <td width="25%" align="center"><img src="img/multiverse3.png" width="100%"></td>
