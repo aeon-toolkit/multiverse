@@ -1,0 +1,5 @@
+dataset,Transformer,Informer,MiniRocket,Pyraformer,Crossformer,TimesNet,iTransformer,AutoLDT
+EthanolConcentration,32.7,31.6,38.2,30.8,38.0,35.7,41.22,37.4
+Handwriting,32.0,32.8,30.5,29.4,28.8,32.1,28.56,30.86
+SelfRegulationSCP1,91.2,90.1,91.44,88.1,92.1,91.8,91.1,91.75
+UWaveGestureLibrary,85.6,85.6,77.29,85.9,85.3,85.3,84.95,87.77

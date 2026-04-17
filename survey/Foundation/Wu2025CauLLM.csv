@@ -1,0 +1,5 @@
+dataset,XGBoost,Autoformer,FEDformer,PatchTST,DLinear,LightTS,TimesNet,UniTS-ST,GPT4TS,CauLLM
+SelfRegulationSCP1,81.9,56.7,77.5,86.7,90.1,91.1,90.1,88.1,92.5,92.5
+SelfRegulationSCP2,48.3,50.6,52.2,55.6,52.2,58.9,56.1,57.2,56.7,59.4
+UWaveGestureLibrary,75.0,40.3,74.4,85.6,81.6,83.8,82.5,81.9,86.3,86.6
+BasicMotions,82.5,70.0,75.0,70.0,92.5,80.0,97.5,95.0,90.0,97.5

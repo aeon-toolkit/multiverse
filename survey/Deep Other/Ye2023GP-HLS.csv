@@ -1,0 +1,7 @@
+Dataset,GP-HLS,DTW_D,ROCKET,TST
+EthanolConcentration,0.467,0.452,0.326,0.326
+Handwriting,0.312,0.286,0.588,0.309
+Heartbeat,0.781,0.717,0.756,0.776
+PEMS-SF,0.919,0.711,0.751,0.896
+SpokenArabicDigits,0.968,0.963,0.712,0.993
+HJapaneseVowels,0.997,0.949,0.962,0.994

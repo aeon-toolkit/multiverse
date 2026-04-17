@@ -1,0 +1,8 @@
+Dataset,ED,DTW,TapNet,WEASEL,Fang2020STSP
+ArticularyWordRecognition,0.97,0.98,0.987,,0.98
+FaceDetection,0.519,0.513,0.556,,0.57
+BasicMotions,0.675,1.0,1.0,,1.0
+Heartbeat,0.62,0.659,0.751,,0.72
+SpokenArabicDigits,0.967,0.96,0.983,0.992,0.98
+JapaneseVowels,0.924,0.959,0.965,0.976,0.97
+RacketSports,0.868,0.842,0.868,0.934,0.87
