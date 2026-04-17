@@ -1,5 +1,6 @@
-THIS IS A WIP DRAFT FOR THE MULTIVERSE DATASETS AND LEADERBOARD.
 You can find the archive datasets on Zenodo here: https://zenodo.org/communities/tsml/records?q=&f=subject%3Auea%20archive&l=list&p=1&s=20&sort=newest
+
+this is a work in progress
 ---
 
 
