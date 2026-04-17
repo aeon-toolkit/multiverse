@@ -1,0 +1,6 @@
+Dataset,MLP,FCN,ResNet,Time-CNN,InceptionTime,Proposed (False),Proposed (True)
+Epilepsy,0.274,0.965,0.967,0.506,0.814,0.681,0.987
+EthanolConcentration,0.168,0.246,0.259,0.206,0.226,0.213,0.271
+RacketSports,0.243,0.853,0.85,0.631,0.807,0.419,0.764
+StandWalkJump,0.275,0.255,0.221,0.334,0.281,0.167,0.28
+UWaveGestureLibrary,0.247,0.815,0.624,0.801,0.716,0.262,0.789

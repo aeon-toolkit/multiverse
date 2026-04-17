@@ -1,0 +1,5 @@
+Dataset,CKCNN-Seq,S4,FlexTCN-6,"CCNN{4,140}","CCNN{6,380}",ModernTCN,CKConv,Refined TIP,InceptionTime (IP),ModernTCN - Variable Independent,CKConv + ModernTCN
+Speech Commands MFCC,0.953,0.94,0.977,0.95,0.98,0.922,,,,,
+Speech Commands Raw,0.717,0.983,0.917,0.983,0.984,0.843,,,,,
+CharacterTrajectories,,,,,,95.02 ± 0.9,99.07 ± 0.3,78.11 ± 1.18,82.81 ± 0.40,,
+PhysioNet,,,,,,0.895 ± 0.007,0.883 ± 0.011,,,0.875 ± 0.004,0.904 ± 0.004

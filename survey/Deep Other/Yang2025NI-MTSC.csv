@@ -1,0 +1,9 @@
+Method,AverageAccuracy,AverageRank
+TS-TCC,0.642,5.75
+TNC,0.638,5.861
+MCL,0.632,5.944
+TS2Vec,0.683,4.25
+InfoTSs,0.707,2.778
+MICOS,0.727,2.556
+Series2Vec(SVM),0.635,6.639
+NI-MTSC,0.735,2.222

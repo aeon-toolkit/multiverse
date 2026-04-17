@@ -1,0 +1,4 @@
+Task,Metric,Autoformer,FEDformer,Inception,Informer,OS-CNN,TimesNet,DM-FCN
+TSER Regression Dataset,Ave. N-RMSE,1.46,1.14,0.86,0.97,0.81,1.0,0.76
+UEA Classification Dataset,Ave. Acc.,0.5993,0.6403,0.7475,0.7102,0.7513,0.7159,0.7584
+UCR Classification Dataset,Ave. Acc.,0.5402,0.6185,0.7058,0.7287,0.7993,0.7401,0.8236

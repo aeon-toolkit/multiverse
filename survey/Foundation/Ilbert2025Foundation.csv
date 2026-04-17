@@ -1,0 +1,14 @@
+dataset,MOMENT | full_no_adapter | full_fine_tuning_no_adapter,Mantis | full_no_adapter | full_fine_tuning_no_adapter,MOMENT | PCA | adapter_comparison,MOMENT | Rand_Proj | adapter_comparison,MOMENT | SVD | adapter_comparison,MOMENT | VAR | adapter_comparison,MOMENT | head_no_adapter | adapter_comparison,MOMENT | lcomb | adapter_comparison,MOMENT | lcomb_top_k | adapter_comparison,Mantis | PCA | adapter_comparison,Mantis | Rand_Proj | adapter_comparison,Mantis | SVD | adapter_comparison,Mantis | VAR | adapter_comparison,Mantis | head_no_adapter | adapter_comparison,Mantis | lcomb | adapter_comparison,Mantis | lcomb_top_k | adapter_comparison,MOMENT | PCA | MOMENT_pca_variants,MOMENT | Patch_16 | MOMENT_pca_variants,MOMENT | Patch_8 | MOMENT_pca_variants,MOMENT | Scaled_PCA | MOMENT_pca_variants,Mantis | PCA | Mantis_pca_variants,Mantis | Patch_16 | Mantis_pca_variants,Mantis | Patch_8 | Mantis_pca_variants,Mantis | Scaled_PCA | Mantis_pca_variants
+DuckDuckGeese,COM,COM,0.627,0.5,0.667,0.407,0.46,0.427,0.393,0.558,0.487,0.6,0.4,0.42,0.36,0.393,0.667,0.573,0.567,0.533,0.558,0.44,0.467,0.522
+FaceDetection,COM,COM,0.567,0.552,0.566,0.555,0.623,TO,TO,0.554,0.533,0.551,0.539,0.595,0.548,0.55,0.566,0.558,0.582,COM,0.554,0.547,0.551,0.55
+FingerMovements,COM,COM,,,,,,,,,,,,,,,,,,,,,,
+HandMovementDirection,0.356,0.401,0.41,0.405,0.365,0.369,0.401,0.378,0.414,0.396,0.329,0.351,0.329,0.342,0.32,0.32,0.365,0.383,0.464,0.356,0.367,0.369,0.396,0.327
+Heartbeat,COM,COM,0.732,0.756,0.732,0.725,0.74,0.737,0.737,0.766,0.776,0.737,0.78,0.811,0.748,0.779,0.732,0.741,0.738,0.728,0.736,0.763,0.766,0.734
+InsectWingbeat,COM,COM,0.239,0.193,0.224,0.195,0.284,0.167,0.213,0.344,0.333,0.352,0.238,0.614,0.171,0.354,0.224,0.459,0.458,0.239,0.344,0.266,0.287,0.268
+JapaneseVowels,0.925,0.981,0.801,0.796,0.803,0.734,0.885,0.797,0.819,0.922,0.902,0.897,0.885,0.979,0.798,0.816,0.803,0.963,0.967,0.723,0.89,0.921,0.922,0.865
+MotorImagery,COM,COM,0.59,0.567,0.607,0.55,0.643,0.583,0.593,0.593,0.577,0.59,0.607,0.6,0.557,0.607,0.607,0.597,0.577,0.59,0.567,0.573,0.593,0.552
+NATOPS,TO,0.937,0.776,0.774,0.739,0.813,0.872,0.596,0.769,0.874,0.852,0.82,0.85,0.944,0.787,0.826,0.739,0.915,0.857,0.731,0.837,0.87,0.874,0.84
+PEMS-SF,COM,COM,0.678,0.644,0.511,0.611,0.834,0.74,0.697,0.674,0.615,0.64,0.615,0.923,0.584,0.594,0.511,0.696,0.719,0.678,0.584,0.674,0.634,0.613
+PhonemeSpectra,TO,0.342,0.234,0.245,0.212,0.228,0.234,TO,TO,0.27,0.293,0.259,0.294,0.296,0.279,0.286,0.212,0.186,0.224,0.227,0.27,0.205,0.234,0.262
+SpokenArabicDigits,TO,0.987,0.972,0.961,0.978,0.935,0.977,TO,TO,0.962,0.879,0.933,0.946,0.94,0.834,0.873,0.978,0.956,0.967,0.963,0.962,0.899,0.921,0.952
+FingerMovement,,,0.593,0.573,0.573,0.613,0.573,0.573,0.54,0.593,0.57,0.53,0.582,0.627,0.58,0.567,0.573,0.563,0.633,0.563,0.593,0.57,0.53,0.583
