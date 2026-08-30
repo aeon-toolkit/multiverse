@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Multiverse-core leaderboard</title><style>
+:root {
+  --bg: #ffffff; --fg: #1a1a1a; --muted: #666666;
+  --line: #e0e0e0; --head: #f5f5f5; --best: #e8f4ec; --accent: #2b6cb0;
+  --stripe: #fafafa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181c; --fg: #e8e8e8; --muted: #9aa0a6;
+    --line: #30343a; --head: #212429; --best: #1e3226; --accent: #7aa7d9;
+    --stripe: #1b1e23;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+h2 { font-size: 1.15rem; margin: 2.5rem 0 .75rem; }
+.sub { color: var(--muted); margin: 0 0 2rem; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: .45rem .7rem; text-align: right; white-space: nowrap;
+  border-bottom: 1px solid var(--line); }
+th { background: var(--head); font-weight: 600; position: sticky; top: 0; }
+td.pos { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums;
+  width: 2.5rem; }
+th.pos { text-align: right; color: var(--muted); }
+th:nth-child(-n+2), td:nth-child(-n+2) { position: sticky; background: var(--bg); }
+td:nth-child(2), th:nth-child(2) { text-align: left; }
+th:nth-child(1), td:nth-child(1) { left: 0; }
+th:nth-child(2), td:nth-child(2) { left: 2.5rem; box-shadow: 1px 0 0 var(--line); }
+th:nth-child(-n+2) { background: var(--head); z-index: 1; }
+tbody tr:last-child td { border-bottom: none; }
+td.best { background: var(--best); font-weight: 600; }
+th.grp { text-align: center; border-left: 2px solid var(--line); }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--accent); }
+th.sortable::after { content: "↕"; opacity: .25; margin-left: .35em;
+  font-size: .85em; }
+th.sortable[aria-sort="ascending"]::after { content: "↑"; opacity: 1; }
+th.sortable[aria-sort="descending"]::after { content: "↓"; opacity: 1; }
+th.sortable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+pre { background: var(--head); border: 1px solid var(--line); border-radius: 6px;
+  padding: .8rem 1rem; overflow-x: auto; font-size: .86rem; line-height: 1.5;
+  margin: 0; }
+pre code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+ul.missing { margin: .5rem 0 0; padding-left: 1.2rem; }
+ul.missing li { margin-bottom: .3rem; }
+th.sep, td.sep { border-left: 2px solid var(--line); }
+tbody td:not(:first-child) { font-variant-numeric: tabular-nums; }
+tbody tr:nth-child(even) td { background: var(--stripe); }
+tbody tr:hover td { background: var(--head); }
+tbody tr:hover td.best { background: var(--best); }
+tbody tr:hover td.best { background: var(--best); }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; background: #fff; border-radius: 6px;
+  padding: .5rem; }
+.note { color: var(--muted); font-size: .88rem; margin-top: .6rem; }
+details { margin-top: .6rem; }
+summary { cursor: pointer; color: var(--accent); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+</style></head><body><main><h1>Multiverse-core leaderboard</h1><p class="sub">23 estimators on 49 datasets &middot; 7 metrics &middot; ordered by average accuracy rank &middot; built 2026-08-30</p><div class="scroll"><table id="leaderboard"><thead><tr><th rowspan="2" class="pos">#</th><th rowspan="2" class="sortable" data-col="1" data-first="asc" data-type="text">Estimator</th><th colspan="2" class="grp">Accuracy</th><th colspan="2" class="grp">Balanced accuracy</th><th colspan="2" class="grp">AUROC</th><th colspan="2" class="grp">F1</th><th colspan="2" class="grp">Log loss &darr;</th><th colspan="2" class="grp">Sensitivity</th><th colspan="2" class="grp">Specificity</th></tr><tr><th class="sep sortable" data-col="2" data-first="desc">Score</th><th class="sortable" data-col="3" data-first="asc">Rank</th><th class="sep sortable" data-col="4" data-first="desc">Score</th><th class="sortable" data-col="5" data-first="asc">Rank</th><th class="sep sortable" data-col="6" data-first="desc">Score</th><th class="sortable" data-col="7" data-first="asc">Rank</th><th class="sep sortable" data-col="8" data-first="desc">Score</th><th class="sortable" data-col="9" data-first="asc">Rank</th><th class="sep sortable" data-col="10" data-first="asc">Score</th><th class="sortable" data-col="11" data-first="asc">Rank</th><th class="sep sortable" data-col="12" data-first="desc">Score</th><th class="sortable" data-col="13" data-first="asc">Rank</th><th class="sep sortable" data-col="14" data-first="desc">Score</th><th class="sortable" data-col="15" data-first="asc">Rank</th></tr></thead><tbody><tr><td class="pos">1</td><td>HC2</td><td class="sep best">0.7961</td><td class="best">8.23</td><td class="sep">0.7628</td><td>8.56</td><td class="sep best">0.8975</td><td class="best">6.49</td><td class="sep">0.7349</td><td>8.46</td><td class="sep best">0.5080</td><td>6.67</td><td class="sep">0.7545</td><td>8.85</td><td class="sep">0.7976</td><td class="best">7.61</td></tr><tr><td class="pos">2</td><td>MRHydra</td><td class="sep">0.7917</td><td>8.41</td><td class="sep best">0.7668</td><td class="best">8.37</td><td class="sep">0.8129</td><td>16.95</td><td class="sep best">0.7404</td><td class="best">8.02</td><td class="sep">7.5088</td><td>18.84</td><td class="sep best">0.7714</td><td class="best">8.22</td><td class="sep">0.7831</td><td>8.97</td></tr><tr><td class="pos">3</td><td>PULSAR</td><td class="sep">0.7890</td><td>9.18</td><td class="sep">0.7629</td><td>9.53</td><td class="sep">0.8719</td><td>8.72</td><td class="sep">0.7181</td><td>9.73</td><td class="sep">0.5618</td><td>8.20</td><td class="sep">0.7336</td><td>10.17</td><td class="sep best">0.8041</td><td>8.63</td></tr><tr><td class="pos">4</td><td>RDST</td><td class="sep">0.7791</td><td>9.53</td><td class="sep">0.7436</td><td>9.89</td><td class="sep">0.7938</td><td>17.51</td><td class="sep">0.7072</td><td>10.20</td><td class="sep">7.9635</td><td>19.20</td><td class="sep">0.7195</td><td>10.84</td><td class="sep">0.7917</td><td>8.86</td></tr><tr><td class="pos">5</td><td>RIST</td><td class="sep">0.7826</td><td>9.90</td><td class="sep">0.7553</td><td>10.70</td><td class="sep">0.8748</td><td>8.50</td><td class="sep">0.7303</td><td>10.22</td><td class="sep">0.5693</td><td>8.80</td><td class="sep">0.7570</td><td>10.56</td><td class="sep">0.7731</td><td>10.89</td></tr><tr><td class="pos">6</td><td>DrCIF</td><td class="sep">0.7854</td><td>10.30</td><td class="sep">0.7572</td><td>10.79</td><td class="sep">0.8823</td><td>8.81</td><td class="sep">0.7304</td><td>11.00</td><td class="sep">0.5835</td><td>9.65</td><td class="sep">0.7523</td><td>11.49</td><td class="sep">0.7800</td><td>10.90</td></tr><tr><td class="pos">7</td><td>CIF</td><td class="sep">0.7882</td><td>10.51</td><td class="sep">0.7609</td><td>10.65</td><td class="sep">0.8929</td><td>8.48</td><td class="sep">0.7331</td><td>10.76</td><td class="sep">0.5823</td><td>9.61</td><td class="sep">0.7553</td><td>11.46</td><td class="sep">0.7841</td><td>10.31</td></tr><tr><td class="pos">8</td><td>FreshPRINCE</td><td class="sep">0.7831</td><td>10.53</td><td class="sep">0.7611</td><td>10.94</td><td class="sep">0.8738</td><td>8.48</td><td class="sep">0.7315</td><td>10.81</td><td class="sep">0.5426</td><td class="best">6.51</td><td class="sep">0.7502</td><td>11.14</td><td class="sep">0.7854</td><td>11.20</td></tr><tr><td class="pos">9</td><td>QUANT</td><td class="sep">0.7829</td><td>10.68</td><td class="sep">0.7597</td><td>10.81</td><td class="sep">0.8836</td><td>8.07</td><td class="sep">0.7314</td><td>10.68</td><td class="sep">0.5584</td><td>7.78</td><td class="sep">0.7621</td><td>10.78</td><td class="sep">0.7681</td><td>11.37</td></tr><tr><td class="pos">10</td><td>Arsenal</td><td class="sep">0.7738</td><td>10.92</td><td class="sep">0.7438</td><td>10.61</td><td class="sep">0.8462</td><td>13.48</td><td class="sep">0.7114</td><td>10.85</td><td class="sep">3.7077</td><td>16.05</td><td class="sep">0.7349</td><td>10.88</td><td class="sep">0.7775</td><td>10.76</td></tr><tr><td class="pos">11</td><td>ROCKET</td><td class="sep">0.7760</td><td>10.92</td><td class="sep">0.7445</td><td>10.66</td><td class="sep">0.7960</td><td>18.28</td><td class="sep">0.7115</td><td>11.21</td><td class="sep">8.0722</td><td>19.84</td><td class="sep">0.7294</td><td>11.78</td><td class="sep">0.7820</td><td>11.12</td></tr><tr><td class="pos">12</td><td>LITETime-MV</td><td class="sep">0.7619</td><td>11.36</td><td class="sep">0.7408</td><td>10.02</td><td class="sep">0.8516</td><td>10.29</td><td class="sep">0.6923</td><td>10.16</td><td class="sep">1.1548</td><td>11.86</td><td class="sep">0.7225</td><td>9.93</td><td class="sep">0.7757</td><td>11.06</td></tr><tr><td class="pos">13</td><td>H-InceptionTime</td><td class="sep">0.7529</td><td>11.71</td><td class="sep">0.7300</td><td>10.95</td><td class="sep">0.8494</td><td>10.68</td><td class="sep">0.6977</td><td>10.59</td><td class="sep">1.2100</td><td>12.73</td><td class="sep">0.7358</td><td>10.39</td><td class="sep">0.7489</td><td>12.38</td></tr><tr><td class="pos">14</td><td>STSF</td><td class="sep">0.7830</td><td>11.89</td><td class="sep">0.7613</td><td>11.63</td><td class="sep">0.8815</td><td>10.27</td><td class="sep">0.7200</td><td>12.14</td><td class="sep">0.5842</td><td>8.53</td><td class="sep">0.7445</td><td>12.47</td><td class="sep">0.7933</td><td>12.32</td></tr><tr><td class="pos">15</td><td>LiteTIME</td><td class="sep">0.7409</td><td>12.51</td><td class="sep">0.7200</td><td>11.80</td><td class="sep">0.8377</td><td>12.00</td><td class="sep">0.6756</td><td>12.07</td><td class="sep">1.3840</td><td>12.84</td><td class="sep">0.7168</td><td>10.82</td><td class="sep">0.7404</td><td>12.16</td></tr><tr><td class="pos">16</td><td>ConvTran</td><td class="sep">0.7621</td><td>13.05</td><td class="sep">0.7286</td><td>13.33</td><td class="sep">0.8640</td><td>11.13</td><td class="sep">0.6936</td><td>12.87</td><td class="sep">0.7657</td><td>9.57</td><td class="sep">0.7295</td><td>12.74</td><td class="sep">0.7499</td><td>13.30</td></tr><tr><td class="pos">17</td><td>PatchMTSC</td><td class="sep">0.7524</td><td>13.26</td><td class="sep">0.7054</td><td>14.05</td><td class="sep">0.8310</td><td>12.88</td><td class="sep">0.6740</td><td>13.70</td><td class="sep">0.7205</td><td>9.53</td><td class="sep">0.7066</td><td>13.17</td><td class="sep">0.7393</td><td>13.34</td></tr><tr><td class="pos">18</td><td>Catch22</td><td class="sep">0.7573</td><td>13.76</td><td class="sep">0.7326</td><td>14.09</td><td class="sep">0.8711</td><td>11.13</td><td class="sep">0.7045</td><td>14.16</td><td class="sep">0.6495</td><td>11.33</td><td class="sep">0.7375</td><td>13.84</td><td class="sep">0.7449</td><td>13.99</td></tr><tr><td class="pos">19</td><td>TSF</td><td class="sep">0.7622</td><td>14.10</td><td class="sep">0.7373</td><td>13.91</td><td class="sep">0.8763</td><td>11.95</td><td class="sep">0.7005</td><td>14.29</td><td class="sep">0.6597</td><td>10.63</td><td class="sep">0.7187</td><td>14.90</td><td class="sep">0.7715</td><td>13.71</td></tr><tr><td class="pos">20</td><td>STC</td><td class="sep">0.7628</td><td>14.55</td><td class="sep">0.7318</td><td>14.52</td><td class="sep">0.8769</td><td>11.70</td><td class="sep">0.7055</td><td>14.40</td><td class="sep">0.5866</td><td>10.27</td><td class="sep">0.7310</td><td>14.37</td><td class="sep">0.7598</td><td>14.29</td></tr><tr><td class="pos">21</td><td>TDE</td><td class="sep">0.7314</td><td>14.92</td><td class="sep">0.6907</td><td>15.05</td><td class="sep">0.8351</td><td>12.94</td><td class="sep">0.6441</td><td>14.61</td><td class="sep">0.8006</td><td>11.57</td><td class="sep">0.6773</td><td>14.00</td><td class="sep">0.7387</td><td>13.12</td></tr><tr><td class="pos">22</td><td>Summary</td><td class="sep">0.6934</td><td>17.14</td><td class="sep">0.6672</td><td>17.04</td><td class="sep">0.8254</td><td>15.96</td><td class="sep">0.6309</td><td>17.04</td><td class="sep">0.8535</td><td>13.88</td><td class="sep">0.6631</td><td>16.82</td><td class="sep">0.6921</td><td>17.07</td></tr><tr><td class="pos">23</td><td>1NN-DTW</td><td class="sep">0.6752</td><td>18.64</td><td class="sep">0.6527</td><td>18.10</td><td class="sep">0.7215</td><td>21.31</td><td class="sep">0.6214</td><td>18.01</td><td class="sep">11.7085</td><td>22.11</td><td class="sep">0.6620</td><td>16.40</td><td class="sep">0.6647</td><td>18.65</td></tr></tbody></table></div><p class="note">Average score and average rank over the 49 datasets with results for every estimator on every metric. Best in each column is highlighted. Metrics marked &darr; are better when lower.</p><h2>Missing results</h2><ul class="missing"><li><b>HC2</b> &mdash; AustraliaRainfall_disc (Time limit); STEW, Tiselac, USCActivity (cancelled before completion)</li><li><b>MRHydra</b> &mdash; AustraliaRainfall_disc (OOM); PenDigits (ValueError: n_timepoints must be &gt;= 9, but found 8); Tiselac (LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738))</li><li><b>PULSAR</b> &mdash; AutomotiveRoadTrials, Handwriting, LSST (not recorded)</li><li><b>RDST</b> &mdash; AustraliaRainfall_disc, Tiselac (LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738)); USCActivity (OOM)</li><li><b>FreshPRINCE</b> &mdash; FaceDetection, FordChallenge, Skoda, Tiselac (OOM)</li><li><b>ROCKET</b> &mdash; AustraliaRainfall_disc (LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738))</li><li><b>STSF</b> &mdash; AustraliaRainfall_disc, PenDigits (not recorded)</li><li><b>LiteTIME</b> &mdash; BIDMC32HR_disc, BIDMC32SpO2_disc, USCActivity (not recorded)</li><li><b>ConvTran</b> &mdash; Alzheimers, EigenWorms, PhotoStimulation (CUDA out of memory); EmoPain (ValueError: input collection has too little variation (std &lt;= 1e-07))</li><li><b>PatchMTSC</b> &mdash; EmoPain (ValueError: input collection has too little variation (std &lt;= 1e-07)); PenDigits (ValueError: patch_len exceeds the number of timepoints)</li><li><b>TSF</b> &mdash; AustraliaRainfall_disc (not recorded)</li><li><b>TDE</b> &mdash; AustraliaRainfall_disc, Tiselac, USCActivity (Time limit); STEW (cancelled before completion)</li><li><b>Summary</b> &mdash; AustraliaRainfall_disc (not recorded)</li><li><b>1NN-DTW</b> &mdash; BIDMC32HR_disc (Time limit); BIDMC32SpO2_disc (not recorded)</li></ul><p class="note">Scoring uses the 49 datasets every estimator completed, so a dataset any one of them is missing is left out for all. Reasons are from the job logs of these runs.</p><h2>Reproducing this page</h2><pre><code>from aeon.datasets.tsc_datasets import multiverse_core
+from multiverse.experiments.tables import leaderboard
+
+leaderboard(
+    datasets=sorted(multiverse_core),
+    estimators=[&quot;HC2&quot;, &quot;MRHydra&quot;, &quot;PULSAR&quot;, &quot;RDST&quot;, &quot;RIST&quot;, &quot;DrCIF&quot;, &quot;CIF&quot;, &quot;FreshPRINCE&quot;, &quot;QUANT&quot;, &quot;Arsenal&quot;, &quot;ROCKET&quot;, &quot;LITETime-MV&quot;, &quot;H-InceptionTime&quot;, &quot;STSF&quot;, &quot;LiteTIME&quot;, &quot;ConvTran&quot;, &quot;PatchMTSC&quot;, &quot;Catch22&quot;, &quot;TSF&quot;, &quot;STC&quot;, &quot;TDE&quot;, &quot;Summary&quot;, &quot;1NN-DTW&quot;],
+    metrics=[&quot;accuracy&quot;, &quot;balacc&quot;, &quot;auroc&quot;, &quot;f1&quot;, &quot;logloss&quot;, &quot;sensitivity&quot;, &quot;specificity&quot;],
+    sort_by=&quot;accuracy&quot;,
+)</code></pre><p class="note">Or <code>python -m multiverse.experiments.tables</code> to rebuild it with the defaults.</p></main><script>
+(function () {
+  var table = document.getElementById("leaderboard");
+  if (!table) return;
+  var body = table.tBodies[0];
+  var headers = table.querySelectorAll("th.sortable");
+
+  function value(row, index, text) {
+    var cell = row.cells[index];
+    if (!cell) return text ? "" : 0;
+    var raw = cell.textContent.trim();
+    if (text) return raw.toLowerCase();
+    var number = parseFloat(raw.replace(/,/g, ""));
+    return isNaN(number) ? 0 : number;
+  }
+
+  function sort(header) {
+    var index = parseInt(header.dataset.col, 10);
+    var isText = header.dataset.type === "text";
+    // repeat clicks toggle; a new column starts in its "best first" direction
+    var current = header.getAttribute("aria-sort");
+    var direction;
+    if (current === "ascending") direction = "descending";
+    else if (current === "descending") direction = "ascending";
+    else direction = header.dataset.first === "asc" ? "ascending" : "descending";
+
+    var sign = direction === "ascending" ? 1 : -1;
+    var rows = Array.prototype.slice.call(body.rows);
+    rows.sort(function (a, b) {
+      var x = value(a, index, isText);
+      var y = value(b, index, isText);
+      if (x < y) return -sign;
+      if (x > y) return sign;
+      return 0;
+    });
+    rows.forEach(function (row, i) {
+      body.appendChild(row);
+      // the position column always numbers the order actually on screen
+      if (row.cells[0]) row.cells[0].textContent = i + 1;
+    });
+
+    headers.forEach(function (other) { other.removeAttribute("aria-sort"); });
+    header.setAttribute("aria-sort", direction);
+  }
+
+  headers.forEach(function (header) {
+    header.tabIndex = 0;
+    header.addEventListener("click", function () { sort(header); });
+    header.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        sort(header);
+      }
+    });
+  });
+})();
+</script></body></html>
