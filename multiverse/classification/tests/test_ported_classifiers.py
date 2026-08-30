@@ -145,3 +145,82 @@ def test_get_test_params(classifier_class):
 
     assert isinstance(params, dict)
     assert isinstance(classifier_class(**params), classifier_class)
+
+
+def test_timesnet_learning_rate_schedule():
+    """The TSLib ``type1`` schedule fires every five epochs and halves each time."""
+    import torch
+
+    classifier = TimesNetClassifier(learning_rate=1e-3, n_epochs=30)
+    parameter = torch.nn.Parameter(torch.zeros(1))
+
+    for epoch, expected in [
+        (1, None),
+        (4, None),
+        (5, 1e-3 * 0.5**4),
+        (6, None),
+        (10, 1e-3 * 0.5**9),
+        (15, 1e-3 * 0.5**14),
+    ]:
+        optimiser = torch.optim.SGD([parameter], lr=1e-3)
+        assert classifier._adjust_learning_rate(optimiser, epoch) == expected
+        if expected is not None:
+            assert optimiser.param_groups[0]["lr"] == expected
+
+
+def test_timesnet_learning_rate_schedule_can_be_disabled():
+    """``lr_adjust=None`` leaves the rate untouched at every epoch."""
+    import torch
+
+    classifier = TimesNetClassifier(learning_rate=1e-3, n_epochs=30, lr_adjust=None)
+    optimiser = torch.optim.SGD([torch.nn.Parameter(torch.zeros(1))], lr=1e-3)
+
+    for epoch in range(1, 31):
+        assert classifier._adjust_learning_rate(optimiser, epoch) is None
+    assert optimiser.param_groups[0]["lr"] == 1e-3
+
+
+def test_timesnet_schedule_changes_training():
+    """The schedule is not a no-op over a run long enough to reach epoch five."""
+    X, y = make_example_3d_numpy(
+        n_cases=40, n_channels=3, n_timepoints=20, n_labels=3, random_state=3
+    )
+    params = dict(SMALL_PARAMS[TimesNetClassifier], n_epochs=8)
+
+    scheduled = TimesNetClassifier(**params, lr_adjust="type1").fit(X, y)
+    constant = TimesNetClassifier(**params, lr_adjust=None).fit(X, y)
+
+    assert not np.allclose(
+        scheduled.predict_proba(X), constant.predict_proba(X), atol=1e-6
+    )
+
+
+@pytest.mark.parametrize("classifier_class", list(SMALL_PARAMS))
+def test_no_fitted_attributes_before_fit(classifier_class):
+    """Fitted attributes must not exist until ``fit`` has run."""
+    classifier = classifier_class(**SMALL_PARAMS[classifier_class])
+
+    for attribute in ["history_", "device_", "n_channels_"]:
+        assert not hasattr(classifier, attribute), (
+            f"{attribute} exists before fit, so is-fitted checks misreport"
+        )
+
+
+@pytest.mark.parametrize(
+    "params,message",
+    [
+        ({"e_layers": 0}, "e_layers must be a positive integer"),
+        ({"dropout": 1.0}, "dropout must be in"),
+        ({"validation_size": 1.5}, "validation_size must be in"),
+        ({"lr_adjust": "type9"}, "lr_adjust must be one of"),
+    ],
+)
+def test_timesnet_rejects_invalid_parameters(params, message):
+    """Invalid parameters are rejected at the start of fit."""
+    X, y = make_example_3d_numpy(
+        n_cases=12, n_channels=2, n_timepoints=12, n_labels=2, random_state=0
+    )
+    classifier = TimesNetClassifier(**dict(SMALL_PARAMS[TimesNetClassifier], **params))
+
+    with pytest.raises(ValueError, match=message):
+        classifier.fit(X, y)

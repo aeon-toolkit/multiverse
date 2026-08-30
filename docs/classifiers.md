@@ -100,18 +100,31 @@ faithful transcription.
 | ``patch_len`` and ``stride`` clamped to the series length | PatchMTSC | The paper's default ``patch_len=16`` exceeds the length of some Multiverse-core series, which would otherwise fail outright. Recorded on the fitted estimator as ``patch_len_`` and ``stride_`` |
 | Graph mask decay renamed ``weight_decay`` to ``graph_decay`` | PatchMTSC | The original config key is misleading: the value is an exponential distance-decay applied to the constructed graph, not an optimizer setting |
 | Dead ``dropout`` and ``graph_stride`` attributes removed | PatchMTSC network | Constructed by the original but never read in its ``forward``. ``nn.Dropout`` holds no parameters, so neither affects results or the state dict |
-| Validation split moved inside ``fit`` | all three | The originals split train/validation outside the model, which risks leakage between train and test. See the note at the top of this page |
+| Validation split moved inside ``fit`` | all three | The originals split train/validation outside the model, which risks leakage between train and test. TSLib is explicit about it: ``exp_classification.py`` sets ``vali_data = self._get_data(flag='TEST')``, so it selects the retained epoch on the test set. See the note at the top of this page |
+| Test data scaled with training statistics | TimesNet | TSLib fits its normaliser separately per split, so its test set is scaled by its own statistics. The port fits on train and applies to test |
 
 Note that PatchMTSC's two graph blocks are, in the original, distinguished only by a
 ``stride`` argument that their ``forward`` never reads. They are therefore two
 independently initialised copies of the same block whose outputs are concatenated. The
 port preserves this.
 
-TimesNet does not share the common training base class. Its procedure differs in four
-ways that would change published results if unified: it seeds from ``random_state``
-directly rather than through ``check_random_state``, selects on validation *accuracy*
-with early-stopping patience rather than validation loss, uses RAdam, and standardises
-per channel.
+TimesNet does not share the common training base class. Three parts of its procedure
+are faithful to TSLib and would change published results if unified: it selects on
+validation *accuracy* with early-stopping patience rather than validation loss
+(``exp_classification.py`` calls ``early_stopping(-val_accuracy, ...)``), it uses RAdam,
+and it standardises per channel (TSLib's ``Normalizer(norm_type='standardization')``).
+It also seeds from ``random_state`` directly rather than through
+``check_random_state``; that one is not a fidelity constraint, since TSLib simply sets a
+global seed in ``run.py``, and it could be unified with the other two ports.
+
+TimesNet reproduces TSLib's learning rate schedule, which the classification loop
+applies every five epochs. With the default ``lr_adjust="type1"`` the rate becomes
+``learning_rate * 0.5 ** (epoch - 1)`` at epochs 5, 10, 15 and so on, so from the
+published ``learning_rate=0.001`` it falls to 6.3e-5 by epoch 5 and 6.1e-8 by epoch 15:
+over a default 30 epoch run the model is effectively frozen well before the end. Pass
+``lr_adjust=None`` to train at a constant rate instead. Omitting this schedule, as
+earlier versions of this port did, is a materially different optimisation and makes
+results incomparable with the published ones.
 
 ### Equivalence testing
 
