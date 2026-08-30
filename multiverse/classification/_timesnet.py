@@ -44,6 +44,7 @@ from __future__ import annotations
 __maintainer__ = ["TonyBagnall"]
 __all__ = ["TimesNetClassifier"]
 
+import math
 from copy import deepcopy
 
 import numpy as np
@@ -70,8 +71,6 @@ class TimesNetClassifier(BaseClassifier):
 
       Parameters
       ----------
-      seq_len : int or None, default=None
-          Required sequence length. If None, inferred from X.shape[2] during fit.
       e_layers : int, default=2
           Number of TimesBlocks.
       d_model : int, default=64
@@ -90,6 +89,13 @@ class TimesNetClassifier(BaseClassifier):
           Maximum number of training epochs.
       learning_rate : float, default=1e-3
           Learning rate for RAdam.
+      lr_adjust : {"type1", "cosine", None}, default="type1"
+          Learning rate schedule, applied every five epochs as in the original
+          TSLib training loop. ``"type1"``, the TSLib default, sets the rate to
+          ``learning_rate * 0.5 ** (epoch - 1)`` at epochs 5, 10, 15, and so on,
+          which decays it to near zero part way through a default 30 epoch run.
+          ``"cosine"`` follows TSLib's cosine option. ``None`` disables the
+          schedule and trains at a constant rate.
       patience : int, default=10
           Early stopping patience based on internal validation accuracy.
       validation_size : float, default=0.2
@@ -133,7 +139,6 @@ class TimesNetClassifier(BaseClassifier):
 
     def __init__(
         self,
-        seq_len: int | None = None,
         e_layers: int = 2,
         d_model: int = 64,
         d_ff: int = 128,
@@ -143,6 +148,7 @@ class TimesNetClassifier(BaseClassifier):
         batch_size: int = 16,
         n_epochs: int = 30,
         learning_rate: float = 1e-3,
+        lr_adjust: str | None = "type1",
         patience: int = 10,
         validation_size: float = 0.2,
         gradient_clip: float = 4.0,
@@ -151,7 +157,6 @@ class TimesNetClassifier(BaseClassifier):
         random_state: int | None = None,
         verbose: bool = False,
     ):
-        self.seq_len = seq_len
         self.e_layers = e_layers
         self.d_model = d_model
         self.d_ff = d_ff
@@ -161,6 +166,7 @@ class TimesNetClassifier(BaseClassifier):
         self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
+        self.lr_adjust = lr_adjust
         self.patience = patience
         self.validation_size = validation_size
         self.gradient_clip = gradient_clip
@@ -169,20 +175,45 @@ class TimesNetClassifier(BaseClassifier):
         self.random_state = random_state
         self.verbose = verbose
 
-        self.network_: _TimesNetClassificationModel | None = None
-        self.scaler_: _StandardisePerChannel | None = None
-        self.seq_len_: int | None = None
-        self.n_channels_: int | None = None
-        self.device_: torch.device | None = None
-        self.history_: list[dict] | None = None
-
         super().__init__()
 
+    def _validate_parameters(self) -> None:
+        """Check constructor parameters before any work is done."""
+        for name in [
+            "e_layers",
+            "d_model",
+            "d_ff",
+            "top_k",
+            "num_kernels",
+            "batch_size",
+            "n_epochs",
+            "patience",
+        ]:
+            value = getattr(self, name)
+            if not isinstance(value, int) or value <= 0:
+                raise ValueError(f"{name} must be a positive integer")
+        if not 0 <= self.dropout < 1:
+            raise ValueError("dropout must be in [0, 1)")
+        if self.learning_rate < 0:
+            raise ValueError("learning_rate must be non-negative")
+        if not 0 <= self.validation_size < 1:
+            raise ValueError("validation_size must be in [0, 1)")
+        if self.gradient_clip is not None and self.gradient_clip <= 0:
+            raise ValueError("gradient_clip must be positive or None")
+        if self.lr_adjust not in (None, "none", "type1", "cosine"):
+            raise ValueError(
+                'lr_adjust must be one of "type1", "cosine", or None, got '
+                f"{self.lr_adjust!r}"
+            )
+
     def _resolve_device(self) -> torch.device:
-        """Resolve torch device."""
-        if self.device is not None:
-            return torch.device(self.device)
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        """Resolve torch device, rejecting an unavailable CUDA request."""
+        if self.device is None:
+            return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        resolved = torch.device(self.device)
+        if resolved.type == "cuda" and not torch.cuda.is_available():
+            raise RuntimeError("CUDA was requested but is not available")
+        return resolved
 
     @staticmethod
     def _preprocess_X(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -272,12 +303,36 @@ class TimesNetClassifier(BaseClassifier):
         trues = np.concatenate(trues)
         return float(np.mean(preds == trues))
 
+    def _adjust_learning_rate(self, optimiser, epoch: int) -> float | None:
+        """Apply the TSLib learning rate schedule for a one-based ``epoch``.
+
+        Mirrors ``utils/tools.py::adjust_learning_rate`` in the original
+        Time-Series-Library, which the classification training loop calls once
+        every five epochs. Returns the new rate, or None if unchanged.
+        """
+        if self.lr_adjust in (None, "none") or epoch % 5 != 0:
+            return None
+
+        if self.lr_adjust == "type1":
+            lr = self.learning_rate * (0.5 ** (epoch - 1))
+        else:  # cosine
+            lr = (
+                self.learning_rate
+                / 2
+                * (1 + math.cos(epoch / self.n_epochs * math.pi))
+            )
+
+        for param_group in optimiser.param_groups:
+            param_group["lr"] = lr
+        return lr
+
     def _fit(self, X: np.ndarray, y):
         """
         Fit TimesNet.
 
         X must have shape (n_cases, n_channels, n_timepoints).
         """
+        self._validate_parameters()
         _set_torch_seed(self.random_state)
         rng = check_random_state(self.random_state)
 
@@ -288,14 +343,7 @@ class TimesNetClassifier(BaseClassifier):
             )
 
         self.n_channels_ = X.shape[1]
-        inferred_seq_len = X.shape[2]
-        self.seq_len_ = inferred_seq_len if self.seq_len is None else int(self.seq_len)
-
-        if inferred_seq_len != self.seq_len_:
-            raise ValueError(
-                "This TimesNet wrapper assumes equal-length series and requires "
-                "X.shape[2] to match seq_len."
-            )
+        self.seq_len_ = X.shape[2]
 
         x_t, mask = self._preprocess_X(X)
 
@@ -380,7 +428,7 @@ class TimesNetClassifier(BaseClassifier):
                 {
                     "epoch": epoch + 1,
                     "train_loss": train_loss,
-                    "val_score": score,
+                    "validation_accuracy": score,
                 }
             )
 
@@ -405,6 +453,10 @@ class TimesNetClassifier(BaseClassifier):
                 epochs_without_improvement += 1
                 if val_loader is not None and epochs_without_improvement >= self.patience:
                     break
+
+            new_lr = self._adjust_learning_rate(optimiser, epoch + 1)
+            if new_lr is not None and self.verbose:
+                print(f"updating learning rate to {new_lr}")
 
         self.network_.load_state_dict(best_state)
         return self
@@ -460,10 +512,9 @@ class TimesNetClassifier(BaseClassifier):
         return self.classes_[preds]
 
     @classmethod
-    def get_test_params(cls, parameter_set: str = "default") -> dict:
+    def _get_test_params(cls, parameter_set: str = "default") -> dict:
         """Return testing parameter settings."""
         return {
-            "seq_len": 24,
             "e_layers": 1,
             "d_model": 16,
             "d_ff": 16,

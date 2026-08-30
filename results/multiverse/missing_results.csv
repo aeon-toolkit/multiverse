@@ -1,0 +1,35 @@
+estimator,dataset,reason,detail,source
+1NN-DTW,BIDMC32HR_disc,Time limit,,controller report
+1NN-DTW,BIDMC32SpO2_disc,not recorded,,
+ConvTran,Alzheimers,CUDA out of memory,2 attempt(s),DeepLearning/output/ConvTran/Alzheimers/1468234-1.err
+ConvTran,EigenWorms,CUDA out of memory,2 attempt(s),DeepLearning/output/ConvTran/EigenWorms/1468233-1.err
+ConvTran,EmoPain,ValueError: input collection has too little variation (std <= 1e-07),2 attempt(s),DeepLearning/output/ConvTran/EmoPain/1467139-1.err
+ConvTran,PhotoStimulation,CUDA out of memory,2 attempt(s),DeepLearning/output/ConvTran/PhotoStimulation/1468204-1.err
+FreshPRINCE,FaceDetection,OOM at 128GB,8 attempt(s),FeatureBased/output/FreshPRINCE/FaceDetection/3983062-1.err
+FreshPRINCE,FordChallenge,OOM at 128GB,8 attempt(s),FeatureBased/output/FreshPRINCE/FordChallenge/3983063-1.err
+FreshPRINCE,Skoda,OOM at 128GB,8 attempt(s),FeatureBased/output/FreshPRINCE/Skoda/3983064-1.err
+FreshPRINCE,Tiselac,OOM at 128GB,38 attempt(s),FeatureBased/output/FreshPRINCE/Tiselac/3983065-1.err
+HC2,AustraliaRainfall_disc,Time limit,,controller report
+HC2,STEW,cancelled before completion,,controller report
+HC2,Tiselac,cancelled before completion,,controller report
+HC2,USCActivity,cancelled before completion,,controller report
+LiteTIME,BIDMC32HR_disc,not recorded,,
+LiteTIME,BIDMC32SpO2_disc,not recorded,,
+LiteTIME,USCActivity,not recorded,,
+MRHydra,AustraliaRainfall_disc,OOM at 128GB,13 attempt(s),ConvolutionBased/output/MRHydra/AustraliaRainfall_disc/3983068-1.err
+MRHydra,PenDigits,"ValueError: n_timepoints must be >= 9, but found 8",4 attempt(s),ConvolutionBased/output/MRHydra/PenDigits/3958857-1.err
+MRHydra,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ConvolutionBased/output/MRHydra/Tiselac/3983069-1.err
+PatchMTSC,EmoPain,ValueError: input collection has too little variation (std <= 1e-07),2 attempt(s),DeepLearning/output/PatchMTSC/EmoPain/1470336-1.err
+PatchMTSC,PenDigits,ValueError: patch_len exceeds the number of timepoints,2 attempt(s),DeepLearning/output/PatchMTSC/PenDigits/1470039-1.err
+RDST,AustraliaRainfall_disc,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),14 attempt(s),ShapeletBased/output/RDST/AustraliaRainfall_disc/3983070-1.err
+RDST,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ShapeletBased/output/RDST/Tiselac/3983071-1.err
+RDST,USCActivity,OOM at 64GB,exhausted the top memory tier (64GB),controller report
+ROCKET,AustraliaRainfall_disc,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ConvolutionBased/output/ROCKET/AustraliaRainfall_disc/3983073-1.err
+STSF,AustraliaRainfall_disc,not recorded,,
+STSF,PenDigits,not recorded,,
+Summary,AustraliaRainfall_disc,not recorded,,
+TDE,AustraliaRainfall_disc,Time limit,,controller report
+TDE,STEW,cancelled before completion,,controller report
+TDE,Tiselac,Time limit,,controller report
+TDE,USCActivity,Time limit,,controller report
+TSF,AustraliaRainfall_disc,not recorded,,

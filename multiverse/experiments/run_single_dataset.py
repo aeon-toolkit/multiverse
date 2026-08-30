@@ -9,7 +9,7 @@ def single_experiment():
     dataset = "ChinaTown"
 
     X_train, y_train = load_classificiation(dataset, split="train")
-    X_test, y_test = load_classificiation(dataset, split= "test")
+    X_test, y_test = load_classificiation(dataset, split="test")
 
     clf = TimeSeriesForestClassifier(n_estimators=20, random_state=0)
     clf.fit(X_train, y_train)

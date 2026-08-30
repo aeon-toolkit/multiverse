@@ -49,10 +49,19 @@ We specify a subset of 66 datasets for evaluation. These are more balanced in
 application, remove overly similar, too simple or zero information datasets and 
 have a good distribution in size and length.
 
+Per-estimator results for Multiverse-core are stored one directory per estimator,
+with one file per performance measure.
+
 ```python
-df = pd.read_csv(Path("results") / "multiverse_core" / "accuracy_mean.csv")
-print(df.shape)
+from multiverse.experiments.tables import available_estimators, load_metric
+
+print(available_estimators())
+accuracy = load_metric("RIST", "accuracy")
+print(accuracy.shape)
 ```
+
+See [`docs/leaderboard.md`](leaderboard.md) for building a ranked leaderboard from
+these.
 
 
 ## The EEG Classification archive, 2026

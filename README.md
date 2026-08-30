@@ -113,7 +113,11 @@ More info and links to code - [`docs/datasets.md`](docs/datasets.md)
 
 ```python
 from aeon.classification.deep_learning import InceptionTimeClassifier
-from multiverse.classification import TimesNet
+from multiverse.classification import (
+    ConvTranClassifier,
+    PatchMTSCClassifier,
+    TimesNetClassifier,
+)
 
 clf = InceptionTimeClassifier()
 clf.fit(X, y)

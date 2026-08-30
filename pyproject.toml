@@ -53,6 +53,11 @@ dependencies = [
     "aeon_neuro>=0.1",
 ]
 
+[project.optional-dependencies]
+deep-learning = [
+    "torch>=2.0",
+]
+
 [tool.setuptools.packages.find]
 include = ["multiverse*"]
 

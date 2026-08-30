@@ -15,15 +15,9 @@ from aeon.datasets import load_classification
 from aeon.datasets.tsc_datasets import eeg
 from aeon.classification.hybrid import HIVECOTEV2
 from aeon_neuro import classifiers
-from tsml_eval import
-
-classifiers = []
+from multiverse.experiments.run_single_dataset import single_experiment
+classifiers = ["Dummy"]
 datasets = eeg
-
-
-def simple_experiment():
-
-
 
 
 if __name__ == "__main__":
