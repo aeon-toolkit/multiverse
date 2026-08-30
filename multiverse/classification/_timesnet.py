@@ -460,10 +460,9 @@ class TimesNetClassifier(BaseClassifier):
         return self.classes_[preds]
 
     @classmethod
-    def get_test_params(cls, parameter_set: str = "default") -> dict:
+    def _get_test_params(cls, parameter_set: str = "default") -> dict:
         """Return testing parameter settings."""
         return {
-            "seq_len": 24,
             "e_layers": 1,
             "d_model": 16,
             "d_ff": 16,
