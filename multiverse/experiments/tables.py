@@ -733,13 +733,13 @@ def leaderboard(
 def main() -> None:
     """Build the Multiverse-core leaderboard.
 
-    Uses every estimator with results in the repository, other than the Dummy
+    Uses every estimator with results in the repository, including the Dummy
     baseline, over the Multiverse-core datasets all of them have results for.
     """
     from aeon.datasets.tsc_datasets import multiverse_core
 
     datasets = sorted(multiverse_core)
-    estimators = available_estimators(exclude=("Dummy",))
+    estimators = available_estimators()
     print(f"estimators: {', '.join(estimators)}")
 
     path = leaderboard(
