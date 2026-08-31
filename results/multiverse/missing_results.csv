@@ -20,7 +20,6 @@ MRHydra,AustraliaRainfall_disc,OOM at 128GB,13 attempt(s),ConvolutionBased/outpu
 MRHydra,PenDigits,"ValueError: n_timepoints must be >= 9, but found 8",4 attempt(s),ConvolutionBased/output/MRHydra/PenDigits/3958857-1.err
 MRHydra,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ConvolutionBased/output/MRHydra/Tiselac/3983069-1.err
 PatchMTSC,EmoPain,ValueError: input collection has too little variation (std <= 1e-07),2 attempt(s),DeepLearning/output/PatchMTSC/EmoPain/1470336-1.err
-PatchMTSC,PenDigits,ValueError: patch_len exceeds the number of timepoints,2 attempt(s),DeepLearning/output/PatchMTSC/PenDigits/1470039-1.err
 RDST,AustraliaRainfall_disc,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),14 attempt(s),ShapeletBased/output/RDST/AustraliaRainfall_disc/3983070-1.err
 RDST,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ShapeletBased/output/RDST/Tiselac/3983071-1.err
 RDST,USCActivity,OOM at 64GB,exhausted the top memory tier (64GB),controller report
