@@ -33,3 +33,4 @@ TDE,STEW,cancelled before completion,,controller report
 TDE,Tiselac,Time limit,,controller report
 TDE,USCActivity,Time limit,,controller report
 TSF,AustraliaRainfall_disc,not recorded,,
+DisjointCNN,EmoPain,ValueError: input collection has too little variation (std <= 1e-07),"Raised by aeon input validation before fit, so it affects any aeon classifier; 2 attempts",DeepLearning/output/DisjointCNN/EmoPain/1476290-1.err

@@ -16,6 +16,7 @@ from multiverse.classification import (
     ConvTranClassifier,
     PatchMTSCClassifier,
     TimesNetClassifier,
+    TimesURLClassifier,
 )
 from multiverse.classification._convtran import _ConvTranNetwork
 from multiverse.classification._patchmtsc import _PatchMTSCNetwork
@@ -41,6 +42,16 @@ SMALL_PARAMS = {
         "n_epochs": 2,
         "batch_size": 4,
         "validation_size": 0.25,
+        "device": "cpu",
+        "random_state": 0,
+    },
+    TimesURLClassifier: {
+        "output_dims": 8,
+        "hidden_dims": 8,
+        "depth": 2,
+        "n_iters": 2,
+        "batch_size": 4,
+        "probe_max_iter": 50,
         "device": "cpu",
         "random_state": 0,
     },
@@ -81,7 +92,9 @@ def test_repeatable_on_cpu(classifier_class):
     X, y = make_example_3d_numpy(
         n_cases=16, n_channels=2, n_timepoints=10, n_labels=2, random_state=1
     )
-    params = dict(SMALL_PARAMS[classifier_class], n_epochs=1)
+    params = dict(SMALL_PARAMS[classifier_class])
+    if "n_epochs" in params:
+        params["n_epochs"] = 1
 
     first = classifier_class(**params).fit(X, y).predict_proba(X)
     second = classifier_class(**params).fit(X, y).predict_proba(X)
