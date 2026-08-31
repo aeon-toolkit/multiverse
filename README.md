@@ -1,5 +1,4 @@
-this is a work in progress
----
+This is a work in progress, we are adding results as we generate them.
 
 
 
@@ -54,7 +53,7 @@ The current paper version describes:
 | 22 | 1NN-DTW | 0.6712 | 0.6454 | 0.7197 | 0.6136 | 11.8506 | 0.6521 | 0.6636 | 17.82 |
 | 23 | Dummy | 0.3645 | 0.3029 | 0.5000 | 0.1507 | 1.4067 | 0.2855 | 0.3816 | 20.95 |
 
-Average over the 52 Multiverse-core datasets with results for every estimator on every metric, ordered by average accuracy rank. Best in each column in bold.
+Test results for default train/test split. All classifiers trained with default settings. Average over the 52 Multiverse-core datasets with results for every estimator on every metric, ordered by average accuracy rank. Best in each column in bold.
 <!-- LEADERBOARD:END -->
 
 Rebuilt with `python -m multiverse.experiments.tables`, which also writes a sortable
@@ -160,11 +159,34 @@ from aeon.classification.deep_learning import InceptionTimeClassifier
 Or explore published results explored in this repo - [`docs/results.md`](docs/results.md)
 
 ### Run an experiment
-To reproduce a benchmark run or evaluate a new classifier, start from:
 
+Results are generated with [`tsml_eval`](https://github.com/time-series-machine-learning/tsml-eval),
+which writes one file per classifier, dataset and resample in the format the tooling in
+this repository reads:
 
-- [`experiments/run_single_dataset.py`](experiments/run_single_dataset.py)
-- [`experiments/run_benchmark.py`](experiments/run_benchmark.py)
+```text
+<results_path>/<classifier>/Predictions/<dataset>/testResample<id>.csv
+```
+
+Set the data path, results path, classifiers and datasets at the top of `main` in one of:
+
+- [`multiverse/experiments/run_single_dataset.py`](multiverse/experiments/run_single_dataset.py)
+  — one classifier on one dataset, the smallest complete example
+- [`multiverse/experiments/run_benchmark.py`](multiverse/experiments/run_benchmark.py)
+  — a set of classifiers over Multiverse-core
+- [`multiverse/experiments/run_eeg_bakeoff.py`](multiverse/experiments/run_eeg_bakeoff.py)
+  — the same, over the EEG archive
+
+then run it:
+
+```bash
+python -m multiverse.experiments.run_benchmark
+```
+
+Combinations that already have results are skipped, so an interrupted run can be started
+again, and a failure is reported without ending the run. Running the full benchmark on
+one machine takes a very long time; the published results were distributed over a
+cluster.
 
 ### Donate your code and published results
 
@@ -176,7 +198,11 @@ Coming soon
 
 ```text
 multiverse/
-├── docs/                  # Documentation
-├── experiments/           # Benchmark and reproduction scripts
-├── results/               # Submitted results and schema
-└── multiverse/            # Python package source for classifiers
+├── docs/                    # Documentation
+├── img/                     # Images used in the documentation
+├── results/                 # Benchmark results, one directory per classifier
+├── survey/                  # Data behind the MTSC survey
+└── multiverse/              # Python package
+    ├── classification/      # Classifiers not available in aeon
+    ├── examples/            # Short runnable examples
+    └── experiments/         # Result generation and leaderboard tables

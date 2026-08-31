@@ -1,47 +1,43 @@
-from __future__ import annotations
+"""Run a set of classifiers over a set of Multiverse datasets with tsml-eval.
 
-import argparse
-import json
-from pathlib import Path
-import time
+This is the loop that produced the results in results/, reduced to its
+essentials. Note this is for guidance only, showing how to access the
+classifiers and datasets. Running it like this on a single machine will take a
+very long time; the published results were distributed over a cluster with per
+job memory and time limits.
 
-import pandas as pd
-from aeon.classification.convolution_based import RocketClassifier
+Every combination writes one file
 
-from aeon.datasets import load_classification
-from aeon.datasets.tsc_datasets import multivariate_equal_length
+    <results_path>/<classifier>/Predictions/<dataset>/testResample<id>.csv
 
-def experiment_example():
-    datasets = ["BasicMotions"]
-    rows = []
-    for name in datasets:
-        X_train, y_train = load_classification(name, "train")
-        X_test, y_test = load_classification(name, "test")
+Combinations that already have a result file are skipped, so an interrupted run
+can be started again. A combination that fails is reported and the run
+continues, because on a benchmark this size some will always run out of memory
+or time.
 
-        clf = RocketClassifier(n_kernels=500, random_state=0)
+Edit the settings in main and run it with
+
+    python -m multiverse.experiments.run_benchmark
+"""
+
+from aeon.datasets.tsc_datasets import multiverse_core
+
+from multiverse.experiments.run_single_dataset import single_experiment
 
 
-        t0 = time.time()
-        clf.fit(X_train, y_train)
-        fit_s = time.time() - t0
+def main():
+    classifiers = ["ROCKET", "DrCIF", "ConvTran"]
+    datasets = sorted(multiverse_core)
 
-        t1 = time.time()
-        acc = clf.score(X_test, y_test)
-        score_s = time.time() - t1
-
-        rows.append({
-            "dataset": name,
-            "metric": "accuracy",
-            "score": float(acc),
-            "split": "test",
-            "fit_seconds": float(fit_s),
-            "score_seconds": float(score_s),
-        })
-
-    df = pd.DataFrame(rows).sort_values(["dataset"])
-    Path(args.out).write_text(df.to_csv(index=False), encoding="utf-8")
-    print(f"Wrote {args.out}")
+    print(f"{len(classifiers)} classifiers x {len(datasets)} datasets")
+    for classifier in classifiers:
+        for dataset in datasets:
+            try:
+                single_experiment(dataset, classifier)
+                print(f"  done   {classifier} {dataset}")
+            except Exception as e:
+                print(f"  failed {classifier} {dataset}: {type(e).__name__}: {e}")
 
 
 if __name__ == "__main__":
-    experiment_example()
+    main()
