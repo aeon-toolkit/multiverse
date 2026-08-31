@@ -68,10 +68,14 @@ Wei, Y., et al. "PatchMTSC: patch-based multivariate time series classification"
 
 TimesURL is a self-supervised representation learner rather than an end-to-end
 classifier. A contrastive objective pretrains an encoder on the training collection, the
-collection is encoded, and a logistic regression probe is fitted on those
-representations; at prediction time the fitted encoder embeds the new series and the
-probe classifies them. Ported from the authors'
-[implementation](https://github.com/Alrash/TimesURL).
+collection is encoded, and a probe is fitted on those representations; at prediction time
+the fitted encoder embeds the new series and the probe classifies them. Ported from the
+authors' [implementation](https://github.com/Alrash/TimesURL).
+
+The adapter follows the authors' UEA experiment: channels are standardised using
+training data only, a normalised time coordinate is appended, and an RBF SVM is fitted to
+the full-series representations. `eval_protocol` selects the probe, defaulting to their
+`"svm"`, with `"linear"` and `"knn"` also available.
 
 Liu, J. and Chen, S. "TimesURL: Self-supervised Contrastive Learning for Universal Time
 Series Representation Learning." AAAI, 2024.
@@ -172,7 +176,7 @@ faithful transcription.
 | Sibling imports rewritten as relative imports | TimesURL | Upstream is laid out for ``sys.path`` insertion; as a subpackage it needs relative imports. A stray package-level ``from .encoder import TSEncoder`` is dropped, since ``encoder`` lives under ``models`` and the import only went unnoticed because the ``sys.path`` route bypassed it |
 | One unconditional ``print`` silenced | TimesURL | ``lib.py`` printed the training tensor shape on every fit, which would pollute benchmark logs. ``verbose`` controls training output instead |
 | Python's ``random`` seeded alongside numpy and torch | TimesURL | The authors' collator draws from ``random`` for segment masking and index shuffling, so seeding numpy and torch alone left runs irreproducible |
-| ``multi_class`` dropped from the probe | TimesURL | The authors pass ``multi_class="auto"``, deprecated in scikit-learn 1.5 and removed in 1.8. The default already matches its behaviour here |
+| Probe probabilities from ``decision_function`` | TimesURL | An ``SVC`` without ``probability=True`` cannot produce probability estimates, and aeon classifiers must implement ``predict_proba``. The decision scores are softmaxed instead, which avoids the internal cross-validation that Platt scaling would add |
 | ``probability=True`` on the SVM probe | TS2Vec | The authors' grid sets it False, which leaves an ``SVC`` unable to produce probability estimates. aeon classifiers must implement ``predict_proba``, so it is enabled, adding Platt scaling fitted by internal cross-validation on the training data |
 | Layer imports taken from ``tensorflow.keras.layers`` | XCM | The original imports ``Conv1D`` and ``Conv2D`` from ``keras.layers.convolutional``, a path removed in Keras 3. The layers and their arguments are unchanged |
 | Kernel length floored at one point | XCM | The original computes ``int(window_size * n)``, which is zero for series shorter than five points and builds an invalid layer |

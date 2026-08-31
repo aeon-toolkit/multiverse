@@ -53,7 +53,7 @@ SMALL_PARAMS = {
         "depth": 2,
         "n_iters": 2,
         "batch_size": 4,
-        "probe_max_iter": 50,
+        "eval_protocol": "linear",
         "device": "cpu",
         "random_state": 0,
     },

@@ -5,22 +5,24 @@ https://github.com/Alrash/TimesURL
 
 TimesURL is a self-supervised representation learner, not an end-to-end
 classifier. The encoder is pretrained with a contrastive objective, the training
-collection is encoded, and a linear probe is fitted on those representations.
-Classification is therefore a two-stage procedure, which is why this wrapper does
-not share the training loop used by the other ported networks.
+collection is encoded, and a probe is fitted on those representations.
 
 The authors' package is vendored under ``_timesurl_original`` and imported as a
-subpackage. Three changes were made to it, all recorded in that package's
-``__init__``: its sibling imports were rewritten as relative imports so no
-``sys.path`` manipulation is needed, a stray ``from .encoder import TSEncoder``
-at package level was dropped because ``encoder`` lives under ``models``, and one
-unconditional ``print`` of the training tensor shape was silenced. The
+subpackage. Three changes were made to it: its sibling imports were rewritten as
+relative imports so no ``sys.path`` manipulation is needed, a stray
+``from .encoder import TSEncoder`` at package level was dropped because
+``encoder`` lives under ``models``, and the unconditional print of the training
+tensor shape is now guarded by ``verbose`` so it does not pollute run logs. The
 architecture and training procedure are untouched.
 
+Note that TimesURL is a fork of TS2Vec rather than a user of it: its copies of
+``encoder.py`` and ``losses.py`` are modified, so the two vendored packages are
+kept separate. See ``_ts2vec.py``.
+
 This wrapper is designed for aeon and therefore assumes input X is a 3D NumPy
-array with shape (n_cases, n_channels, n_timepoints). The original implementation
-expects (n_cases, n_timepoints, n_channels) with an appended time coordinate and
-an observation mask, both of which are constructed here.
+array with shape (n_cases, n_channels, n_timepoints). The original expects
+(n_cases, n_timepoints, n_channels) with an appended time coordinate and an
+observation mask, both of which are constructed here.
 
 The original source is distributed under the MIT License.
 
@@ -47,75 +49,104 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from __future__ import annotations
-
-__maintainer__ = ["TonyBagnall"]
-__all__ = ["TimesURLClassifier"]
-
 import random
 from types import SimpleNamespace
 
 import numpy as np
 from aeon.classification import BaseClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 from sklearn.utils import check_random_state
+
+from multiverse.classification._timesurl_original.timesurl import TimesURL
+
+__all__ = ["TimesURLClassifier"]
 
 
 class TimesURLClassifier(BaseClassifier):
-    """TimesURL self-supervised pretraining followed by a linear probe.
+    """TimesURL self-supervised representation learner and classifier.
 
-    The encoder is pretrained on the training collection with the authors'
-    contrastive objective, the collection is then encoded, and a logistic
-    regression probe is fitted on the representations. At prediction time the
-    fitted encoder embeds the new series and the probe classifies them.
-
-    The encoder is fitted exclusively on the training collection. Test series are
-    encoded only after pretraining, and never take part in augmentation, masking,
-    normalisation or probe fitting, so nothing about the test set informs the
-    representation.
+    This adapter follows the authors' UEA classification experiment: channels are
+    standardised using training data only, a normalised time coordinate is appended,
+    TimesURL is pretrained without labels, and an RBF SVM is fitted to full-series
+    representations. The encoder, scaler, and downstream classifier are all fitted
+    exclusively on the training collection.
 
     Parameters
     ----------
     output_dims : int, default=320
-        Width of the representation the encoder produces.
+        Dimension of the learned representation.
     hidden_dims : int, default=64
-        Width of the encoder's hidden layers.
+        Hidden dimension of the encoder.
     depth : int, default=10
-        Number of dilated convolution blocks in the encoder.
-    n_iters : int, default=200
-        Number of pretraining iterations.
-    batch_size : int, default=16
-        Pretraining batch size.
-    learning_rate : float, default=0.001
-        Encoder learning rate.
-    probe_max_iter : int, default=1000
-        Maximum iterations for the logistic regression probe.
+        Number of residual blocks in the encoder.
+    n_iters : int or None, default=None
+        Maximum training iterations. When both ``n_iters`` and ``n_epochs`` are
+        ``None``, the original implementation selects 200 or 600 iterations based
+        on the training-array size.
+    n_epochs : int or None, default=None
+        Maximum training epochs.
+    batch_size : int, default=8
+        Batch size. This is the default in the authors' experiment script; the
+        underlying model class has a default of 16.
+    learning_rate : float, default=1e-4
+        Optimiser learning rate used by the authors' experiment script.
+    max_train_length : int or None, default=3000
+        Split longer training series into sections, as in the experiment script.
+    temporal_unit : int, default=0
+        Minimum temporal unit used by the contrastive loss.
+    sgd : bool, default=False
+        Use SGD and cosine scheduling instead of the original default AdamW.
+    temperature : float, default=1.0
+        Contrastive-loss temperature.
     lmd : float, default=0.01
-        Weight of the reconstruction term in the authors' loss.
+        Weight of the hierarchical contrastive loss.
     segment_num : int, default=3
-        Number of masked segments per series during pretraining.
+        Number of time intervals masked by the data collator.
     mask_ratio_per_seg : float, default=0.05
-        Fraction of the series masked in each segment.
-    device : {"auto", "cpu", "cuda"} or torch device string, default="auto"
-        Device used for pretraining and encoding. ``"auto"`` selects CUDA when
-        available and otherwise CPU.
+        Fraction of the series masked in each interval.
+    eval_protocol : {"svm", "linear", "knn"}, default="svm"
+        Downstream classifier. ``"svm"`` is used by the authors' classification
+        command; the other protocols are also provided by their evaluation code.
+    probe_n_jobs : int, default=5
+        Parallel jobs used by the SVM grid search, matching the original code.
+    probe_max_samples : int or None, default=None
+        Optional representation subsample limit. ``None`` uses the original limits:
+        10,000 for SVM and 100,000 for logistic regression.
+    standardise : bool, default=True
+        Standardise each channel with statistics fitted on the training set. This
+        matches the original UEA loader.
+    device : str, default="auto"
+        PyTorch device. ``"auto"`` selects CUDA, then Apple MPS, then CPU.
     verbose : bool, default=False
-        Whether the encoder prints pretraining progress.
-    random_state : int, RandomState instance or None, default=1234
-        Seed controlling encoder initialisation, masking and the probe.
+        Print the original implementation's training progress.
+    random_state : int or None, default=1234
+        Seed used for Python, NumPy, and PyTorch randomness.
 
+    Notes
+    -----
+    SVM decision scores are converted with a softmax for aeon's ``predict_proba``
+    interface. They preserve the classifier decision but are not calibrated
+    probabilities, matching the original use of ``SVC(probability=False)``.
     Attributes
     ----------
     encoder_ : object
         Pretrained TimesURL encoder.
-    probe_ : sklearn.linear_model.LogisticRegression
-        Linear probe fitted on the encoded training collection.
+    probe_ : object
+        Classifier fitted on the encoded training collection.
+    scaler_ : object or None
+        Per-channel standardiser fitted on the training data, or None when
+        ``standardise`` is False.
     device_ : str
         Resolved device.
-    n_channels_ : int
-        Number of channels seen in ``fit``.
     n_timepoints_ : int
         Series length seen in ``fit``.
+    random_state_ : int
+        Seed actually used, drawn from ``random_state``.
     classes_ : np.ndarray
         Class labels, from ``BaseClassifier``.
     n_classes_ : int
@@ -138,7 +169,6 @@ class TimesURLClassifier(BaseClassifier):
     _tags = {
         "X_inner_type": "numpy3D",
         "capability:multivariate": True,
-        "capability:unequal_length": False,
         "algorithm_type": "deeplearning",
         "non_deterministic": True,
         "python_dependencies": "torch",
@@ -146,147 +176,233 @@ class TimesURLClassifier(BaseClassifier):
 
     def __init__(
         self,
-        output_dims: int = 320,
-        hidden_dims: int = 64,
-        depth: int = 10,
-        n_iters: int = 200,
-        batch_size: int = 16,
-        learning_rate: float = 1e-3,
-        probe_max_iter: int = 1000,
-        lmd: float = 0.01,
-        segment_num: int = 3,
-        mask_ratio_per_seg: float = 0.05,
-        device: str = "auto",
-        verbose: bool = False,
+        output_dims=320,
+        hidden_dims=64,
+        depth=10,
+        n_iters=None,
+        n_epochs=None,
+        batch_size=8,
+        learning_rate=1e-4,
+        max_train_length=3000,
+        temporal_unit=0,
+        sgd=False,
+        temperature=1.0,
+        lmd=0.01,
+        segment_num=3,
+        mask_ratio_per_seg=0.05,
+        eval_protocol="svm",
+        probe_n_jobs=5,
+        probe_max_samples=None,
+        standardise=True,
+        device="auto",
+        verbose=False,
         random_state=1234,
     ):
         self.output_dims = output_dims
         self.hidden_dims = hidden_dims
         self.depth = depth
         self.n_iters = n_iters
+        self.n_epochs = n_epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
-        self.probe_max_iter = probe_max_iter
+        self.max_train_length = max_train_length
+        self.temporal_unit = temporal_unit
+        self.sgd = sgd
+        self.temperature = temperature
         self.lmd = lmd
         self.segment_num = segment_num
         self.mask_ratio_per_seg = mask_ratio_per_seg
+        self.eval_protocol = eval_protocol
+        self.probe_n_jobs = probe_n_jobs
+        self.probe_max_samples = probe_max_samples
+        self.standardise = standardise
         self.device = device
         self.verbose = verbose
         self.random_state = random_state
         super().__init__()
 
-    def _validate_parameters(self) -> None:
-        """Check constructor parameters before any work is done."""
-        for name in [
-            "output_dims",
-            "hidden_dims",
-            "depth",
-            "n_iters",
-            "batch_size",
-            "probe_max_iter",
-            "segment_num",
-        ]:
-            value = getattr(self, name)
-            if not isinstance(value, int) or value <= 0:
-                raise ValueError(f"{name} must be a positive integer")
-        if self.learning_rate < 0:
-            raise ValueError("learning_rate must be non-negative")
-        if not 0 <= self.mask_ratio_per_seg < 1:
-            raise ValueError("mask_ratio_per_seg must be in [0, 1)")
-        if self.lmd < 0:
-            raise ValueError("lmd must be non-negative")
-
-    def _resolve_device(self) -> str:
+    def _fit(self, X, y):
+        """Fit the TimesURL encoder and downstream classifier."""
         import torch
 
-        if self.device == "auto":
-            return "cuda" if torch.cuda.is_available() else "cpu"
-        if str(self.device).startswith("cuda") and not torch.cuda.is_available():
-            raise RuntimeError("CUDA was requested but is not available")
-        return self.device
-
-    @staticmethod
-    def _to_original_layout(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Build the authors' (values, mask) input from an aeon collection.
-
-        The original code expects ``(n_cases, n_timepoints, n_channels + 1)``,
-        where the final column is a time coordinate on [0, 1], plus a separate
-        all-ones observation mask over the real channels.
-        """
-        series = np.transpose(np.asarray(X, dtype=np.float32), (0, 2, 1))
-        n_cases, n_timepoints, n_channels = series.shape
-        time = np.broadcast_to(
-            np.linspace(0, 1, n_timepoints, dtype=np.float32)[None, :, None],
-            (n_cases, n_timepoints, 1),
-        )
-        values = np.concatenate([series, time], axis=2)
-        mask = np.ones((n_cases, n_timepoints, n_channels), dtype=np.float32)
-        return values, mask
-
-    def _encode(self, X: np.ndarray) -> np.ndarray:
-        """Embed a collection with the fitted encoder, one vector per case."""
-        values, mask = self._to_original_layout(X)
-        z = self.encoder_.encode(
-            {"x": values, "mask": mask}, encoding_window="full_series"
-        )
-        return z.reshape(z.shape[0], -1)
-
-    def _fit(self, X: np.ndarray, y):
-        self._validate_parameters()
-
-        import torch
-
-        from multiverse.classification._timesurl_original.timesurl import TimesURL
-
+        self._validate_hyperparameters()
         rng = check_random_state(self.random_state)
-        seed = int(rng.randint(np.iinfo(np.int32).max))
-        # The authors' collator draws from Python's `random` for segment masking
-        # and index shuffling, so seeding numpy and torch alone leaves the run
-        # irreproducible.
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+        self.random_state_ = int(rng.randint(np.iinfo(np.int32).max))
+        random.seed(self.random_state_)
+        np.random.seed(self.random_state_)
+        torch.manual_seed(self.random_state_)
 
-        self.device_ = self._resolve_device()
-        self.n_channels_, self.n_timepoints_ = X.shape[1], X.shape[2]
+        self.device_ = self._resolve_device(torch)
+        if str(self.device_).startswith("cuda"):
+            torch.cuda.manual_seed_all(self.random_state_)
 
-        values, mask = self._to_original_layout(X)
+        self.n_channels_, self.n_timepoints_ = X.shape[1:]
+        if self.n_timepoints_ < 4:
+            raise ValueError("TimesURL requires series with at least 4 timepoints")
+
+        train = np.transpose(np.asarray(X, dtype=np.float32), (0, 2, 1))
+        self.scaler_ = None
+        if self.standardise:
+            self.scaler_ = StandardScaler().fit(
+                train.reshape(-1, self.n_channels_)
+            )
+
+        train_data = self._make_timesurl_data(X)
         args = SimpleNamespace(
             lmd=self.lmd,
             segment_num=self.segment_num,
             mask_ratio_per_seg=self.mask_ratio_per_seg,
             batch_size=self.batch_size,
+            verbose=self.verbose,
         )
         self.encoder_ = TimesURL(
-            self.n_channels_,
-            self.output_dims,
-            self.hidden_dims,
-            self.depth,
+            input_dims=self.n_channels_,
+            output_dims=self.output_dims,
+            hidden_dims=self.hidden_dims,
+            depth=self.depth,
             device=self.device_,
             lr=self.learning_rate,
             batch_size=self.batch_size,
+            sgd=self.sgd,
+            max_train_length=self.max_train_length,
+            temporal_unit=self.temporal_unit,
             args=args,
         )
         self.encoder_.fit(
-            {"x": values, "mask": mask},
+            train_data,
+            n_epochs=self.n_epochs,
             n_iters=self.n_iters,
             verbose=self.verbose,
-            is_scheduler=False,
+            is_scheduler=self.sgd,
+            temp=self.temperature,
         )
 
-        encoded = self._encode(X)
-        encoded_y = np.asarray(
-            [self._class_dictionary[label] for label in y], dtype=np.int64
-        )
-        # multi_class is left at its default: the authors pass "auto", which
-        # sklearn deprecated in 1.5 and removes in 1.8, and whose behaviour the
-        # default already matches for these problems.
-        self.probe_ = LogisticRegression(
-            max_iter=self.probe_max_iter, random_state=seed
-        ).fit(encoded, encoded_y)
+        representations = self._encode(X)
+        labels = np.asarray([self._class_dictionary[value] for value in y])
+        self.probe_ = self._fit_probe(representations, labels)
         return self
 
-    def _check_shape(self, X: np.ndarray) -> None:
+    def _validate_hyperparameters(self):
+        if self.eval_protocol not in {"svm", "linear", "knn"}:
+            raise ValueError(
+                "eval_protocol must be one of {'svm', 'linear', 'knn'}, but found "
+                f"{self.eval_protocol!r}"
+            )
+        if self.n_iters is not None and self.n_iters < 1:
+            raise ValueError("n_iters must be a positive integer or None")
+        if self.n_epochs is not None and self.n_epochs < 1:
+            raise ValueError("n_epochs must be a positive integer or None")
+        if self.batch_size < 1:
+            raise ValueError("batch_size must be a positive integer")
+        if self.max_train_length is not None and self.max_train_length < 4:
+            raise ValueError("max_train_length must be at least 4 or None")
+
+    def _resolve_device(self, torch):
+        requested = "auto" if self.device is None else str(self.device)
+        if requested == "auto":
+            if torch.cuda.is_available():
+                return "cuda"
+            mps = getattr(getattr(torch, "backends", None), "mps", None)
+            if mps is not None and mps.is_available():
+                return "mps"
+            return "cpu"
+        if requested.startswith("cuda") and not torch.cuda.is_available():
+            raise RuntimeError("CUDA was requested but is not available")
+        if requested.startswith("mps"):
+            mps = getattr(getattr(torch, "backends", None), "mps", None)
+            if mps is None or not mps.is_available():
+                raise RuntimeError("MPS was requested but is not available")
+        return requested
+
+    def _make_timesurl_data(self, X):
+        values = np.transpose(np.asarray(X, dtype=np.float32), (0, 2, 1))
+        if self.scaler_ is not None:
+            shape = values.shape
+            values = self.scaler_.transform(
+                values.reshape(-1, self.n_channels_)
+            ).reshape(shape)
+        values = values.astype(np.float32, copy=False)
+        n_cases, n_timepoints, _ = values.shape
+        time = np.broadcast_to(
+            np.linspace(0, 1, n_timepoints, dtype=np.float32)[None, :, None],
+            (n_cases, n_timepoints, 1),
+        )
+        mask = np.ones(values.shape, dtype=np.float32)
+        return {"x": np.concatenate([values, time], axis=2), "mask": mask}
+
+    def _encode(self, X):
+        data = self._make_timesurl_data(X)
+        representations = self.encoder_.encode(
+            data, encoding_window="full_series"
+        )
+        return representations.reshape(representations.shape[0], -1)
+
+    def _fit_probe(self, features, y):
+        if self.eval_protocol == "knn":
+            return make_pipeline(
+                StandardScaler(), KNeighborsClassifier(n_neighbors=1)
+            ).fit(features, y)
+
+        max_samples = self.probe_max_samples
+        if max_samples is None:
+            max_samples = 10_000 if self.eval_protocol == "svm" else 100_000
+        if features.shape[0] > max_samples:
+            features, _, y, _ = train_test_split(
+                features,
+                y,
+                train_size=max_samples,
+                random_state=0,
+                stratify=y,
+            )
+
+        if self.eval_protocol == "linear":
+            return make_pipeline(
+                StandardScaler(),
+                LogisticRegression(
+                    random_state=0,
+                    max_iter=1_000_000,
+                    multi_class="ovr",
+                ),
+            ).fit(features, y)
+
+        svm = SVC(
+            C=np.inf,
+            gamma="scale",
+        )
+        n_classes = np.unique(y).shape[0]
+        if features.shape[0] // n_classes < 5 or features.shape[0] < 50:
+            return svm.fit(features, y)
+
+        search = GridSearchCV(
+            svm,
+            {
+                "C": [1e-4, 1e-3, 1e-2, 0.1, 1, 10, 100, 1000, 10000, np.inf],
+                "kernel": ["rbf"],
+                "degree": [3],
+                "gamma": ["scale"],
+                "coef0": [0],
+                "shrinking": [True],
+                "probability": [False],
+                "tol": [0.001],
+                "cache_size": [200],
+                "class_weight": [None],
+                "verbose": [False],
+                "max_iter": [10_000_000],
+                "decision_function_shape": ["ovr"],
+                "random_state": [None],
+            },
+            cv=5,
+            n_jobs=self.probe_n_jobs,
+        )
+        search.fit(features, y)
+        return search.best_estimator_
+
+    def _check_shape(self, X):
+        """Reject input that does not match what was fitted.
+
+        Without this a mismatched collection fails somewhere inside the encoder,
+        with an error that does not say what was wrong.
+        """
         if X.shape[1] != self.n_channels_:
             raise ValueError(
                 f"X has {X.shape[1]} channels, but the classifier was fitted "
@@ -298,24 +414,32 @@ class TimesURLClassifier(BaseClassifier):
                 f"length {self.n_timepoints_}."
             )
 
-    def _predict_proba(self, X: np.ndarray) -> np.ndarray:
+    def _predict_proba(self, X):
         self._check_shape(X)
-        return self.probe_.predict_proba(self._encode(X))
+        features = self._encode(X)
+        if hasattr(self.probe_, "predict_proba"):
+            return self.probe_.predict_proba(features)
 
-    def _predict(self, X: np.ndarray):
+        scores = self.probe_.decision_function(features)
+        if scores.ndim == 1:
+            scores = np.column_stack([-scores, scores])
+        scores = scores - scores.max(axis=1, keepdims=True)
+        probabilities = np.exp(scores)
+        return probabilities / probabilities.sum(axis=1, keepdims=True)
+
+    def _predict(self, X):
         self._check_shape(X)
         return self.classes_[self.probe_.predict(self._encode(X))]
 
     @classmethod
-    def _get_test_params(cls, parameter_set: str = "default") -> dict:
-        """Return a small parameter set for aeon estimator checks."""
+    def _get_test_params(cls, parameter_set="default"):
         return {
             "output_dims": 8,
             "hidden_dims": 8,
             "depth": 2,
             "n_iters": 2,
             "batch_size": 4,
-            "probe_max_iter": 50,
+            "eval_protocol": "linear",
             "device": "cpu",
             "random_state": 0,
         }
