@@ -162,8 +162,24 @@ Or explore published results explored in this repo - [`docs/results.md`](docs/re
 To reproduce a benchmark run or evaluate a new classifier, start from:
 
 
-- [`experiments/run_single_dataset.py`](experiments/run_single_dataset.py)
-- [`experiments/run_benchmark.py`](experiments/run_benchmark.py)
+Results are generated with [`tsml_eval`](https://github.com/time-series-machine-learning/tsml-eval),
+which writes one file per classifier, dataset and resample in the format the tooling in
+this repository reads.
+
+- [`multiverse/experiments/run_single_dataset.py`](multiverse/experiments/run_single_dataset.py)
+  — one classifier on one dataset, the smallest complete example
+- [`multiverse/experiments/run_benchmark.py`](multiverse/experiments/run_benchmark.py)
+  — a set of classifiers over a set of datasets, defaulting to Multiverse-core
+- [`multiverse/experiments/run_eeg_bakeoff.py`](multiverse/experiments/run_eeg_bakeoff.py)
+  — the same, over the EEG archive
+
+```bash
+python -m multiverse.experiments.run_benchmark     --data-path /path/to/Multiverse     --results-path ./results-raw     --classifiers ROCKET DrCIF ConvTran
+```
+
+Existing results are skipped, so an interrupted run can be restarted. Running the full
+benchmark on one machine takes a very long time; the published results were distributed
+over a cluster.
 
 ### Donate your code and published results
 
@@ -175,7 +191,11 @@ Coming soon
 
 ```text
 multiverse/
-├── docs/                  # Documentation
-├── experiments/           # Benchmark and reproduction scripts
-├── results/               # Submitted results and schema
-└── multiverse/            # Python package source for classifiers
+├── docs/                    # Documentation
+├── img/                     # Images used in the documentation
+├── results/                 # Benchmark results, one directory per classifier
+├── survey/                  # Data behind the MTSC survey
+└── multiverse/              # Python package
+    ├── classification/      # Classifiers not available in aeon
+    ├── examples/            # Short runnable examples
+    └── experiments/         # Result generation and leaderboard tables
