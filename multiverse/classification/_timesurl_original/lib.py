@@ -292,9 +292,8 @@ def get_unlabeled_pretrain_data(X_train, args):
     # X_train = torch.load(args.path + 'X_train.pt')
     # X_val = torch.load(args.path + 'X_val.pt')
     X_train = torch.from_numpy(X_train)
-    # Upstream prints the training shape unconditionally. Left silent here so a
-    # benchmark run's logs are not polluted; the wrapper's `verbose` controls
-    # the training output instead.
+    if getattr(args, "verbose", False):
+        print('X_train: ' + str(X_train.shape))
     # print('X_val: ' + str(X_val.shape))
 
     # data_objects = generate_batches(X_train, X_val, args)
