@@ -7,8 +7,10 @@ __all__ = [
     "ConvTranClassifier",
     "PatchMTSCClassifier",
     "TimesNetClassifier",
+    "TimesURLClassifier",
 ]
 
 from multiverse.classification._convtran import ConvTranClassifier
 from multiverse.classification._patchmtsc import PatchMTSCClassifier
 from multiverse.classification._timesnet import TimesNetClassifier
+from multiverse.classification._timesurl import TimesURLClassifier

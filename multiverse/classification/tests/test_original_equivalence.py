@@ -22,15 +22,18 @@ skip unless the relevant source tree is pointed at by an environment variable:
     MULTIVERSE_CONVTRAN_SRC   root of https://github.com/Navidfoumani/ConvTran
     MULTIVERSE_PATCHMTSC_SRC  root of https://github.com/YanxuanWei/PatchMTSC
     MULTIVERSE_TIMESNET_SRC   root of https://github.com/thuml/Time-Series-Library
+    MULTIVERSE_TIMESURL_SRC   directory holding the authors' TimesURL modules
 
 The originals import ``einops`` and ``pandas``; the ports do not.
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 pytest.importorskip("torch")
@@ -506,3 +509,88 @@ def test_timesnet_random_stream_differs_from_original():
             (original(X, mask, None, None) - port(X, mask)).abs().max().item()
         )
     assert difference > 0
+
+
+# ---------------------------------------------------------------------------
+# TimesURL
+# ---------------------------------------------------------------------------
+
+# TimesURL is vendored rather than reimplemented: the port rewrites the authors'
+# sibling imports as relative imports, drops a stray package-level import of a
+# module that does not exist at that level, and silences one unconditional
+# print. None of that touches the architecture, so equivalence is checked by
+# comparing the vendored copy against the upstream one module by module, rather
+# than by transferring weights between two implementations.
+
+TIMESURL_ALLOWED_DIFFS = {
+    "__init__.py",       # stray import dropped, docstring added
+    "lib.py",            # unconditional print silenced
+}
+
+
+def _timesurl_sources():
+    root = os.environ.get("MULTIVERSE_TIMESURL_SRC")
+    if not root:
+        pytest.skip("MULTIVERSE_TIMESURL_SRC is not set; skipping equivalence test")
+    root = Path(root)
+    if not root.is_dir():
+        pytest.skip(f"MULTIVERSE_TIMESURL_SRC={root} is not a directory")
+    import multiverse.classification._timesurl_original as vendored
+
+    return root, Path(vendored.__file__).parent
+
+
+def _normalise_imports(text):
+    """Canonicalise import style so the two copies can be compared.
+
+    Upstream imports its siblings absolutely and reaches into ``models`` by
+    package path; the vendored copy uses relative imports. Both are reduced to a
+    bare module name so only real code differences remain.
+    """
+    text = re.sub(r"^from \.*(models\.)?", "from ", text, flags=re.M)
+    return [line.rstrip() for line in text.splitlines()]
+
+
+def test_timesurl_vendored_copy_matches_upstream():
+    """Every vendored module is the authors' code, imports aside."""
+    upstream, vendored = _timesurl_sources()
+
+    compared = 0
+    for path in sorted(vendored.rglob("*.py")):
+        relative = path.relative_to(vendored)
+        original = upstream / relative
+        if not original.is_file():
+            pytest.fail(f"{relative} has no upstream counterpart in {upstream}")
+        if relative.name in TIMESURL_ALLOWED_DIFFS:
+            continue
+        assert _normalise_imports(original.read_text(encoding="utf-8")) == (
+            _normalise_imports(path.read_text(encoding="utf-8"))
+        ), f"{relative} differs from upstream beyond the import rewrite"
+        compared += 1
+
+    assert compared > 0
+
+
+def test_timesurl_silenced_print_is_the_only_change_to_lib():
+    """The only edit to lib.py is the removal of one unconditional print."""
+    upstream, vendored = _timesurl_sources()
+    original = (upstream / "lib.py").read_text(encoding="utf-8").splitlines()
+    ported = (vendored / "lib.py").read_text(encoding="utf-8").splitlines()
+
+    original = _normalise_imports("\n".join(original))
+    ported = set(_normalise_imports("\n".join(ported)))
+    removed = [line.strip() for line in original if line not in ported and line.strip()]
+    assert removed == ["print('X_train: ' + str(X_train.shape))"], removed
+
+
+def test_timesurl_encoder_is_the_authors_class():
+    """The wrapper drives the authors' TimesURL class, not a reimplementation."""
+    _timesurl_sources()
+    from multiverse.classification._timesurl_original.timesurl import TimesURL
+
+    from multiverse.classification import TimesURLClassifier
+
+    X = np.random.RandomState(0).rand(12, 2, 20)
+    y = np.array(["a", "b"] * 6)
+    clf = TimesURLClassifier(**TimesURLClassifier._get_test_params()).fit(X, y)
+    assert isinstance(clf.encoder_, TimesURL)
