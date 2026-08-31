@@ -145,10 +145,18 @@ class XCMClassifier(BaseClassifier):
 
     Parameters
     ----------
-    window_size : float, default=0.2
+    window_size : float, default=0.8
         Length of the convolution kernels along time, as a fraction of the
-        series length. The authors' default. The resulting kernel is at least
-        one point long however short the series.
+        series length. The authors tune this per dataset over
+        {0.2, 0.4, 0.6, 0.8, 1.0}; 0.8 is the value their results table uses
+        most often, on 13 of 30 datasets. The 0.2 in their ``config.yml`` is
+        the worked example for BasicMotions, not a default.
+    max_window : int, default=100
+        Upper bound on the kernel length in points. Because ``window_size`` is
+        a fraction, the kernel grows with the series: 0.8 of EigenWorms' 17984
+        points would be a 14387 point kernel. The bound keeps long series
+        tractable. The kernel is also floored at one point, since
+        ``int(window_size * n)`` is zero for very short series.
     n_filters : int, default=128
         Number of filters in each convolution.
     n_epochs : int, default=100
@@ -204,7 +212,8 @@ class XCMClassifier(BaseClassifier):
 
     def __init__(
         self,
-        window_size: float = 0.2,
+        window_size: float = 0.8,
+        max_window: int = 100,
         n_filters: int = 128,
         n_epochs: int = 100,
         batch_size: int = 32,
@@ -212,6 +221,7 @@ class XCMClassifier(BaseClassifier):
         random_state=None,
     ):
         self.window_size = window_size
+        self.max_window = max_window
         self.n_filters = n_filters
         self.n_epochs = n_epochs
         self.batch_size = batch_size
@@ -223,7 +233,7 @@ class XCMClassifier(BaseClassifier):
         """Check constructor parameters before any work is done."""
         if not 0 < self.window_size <= 1:
             raise ValueError("window_size must be in (0, 1]")
-        for name in ["n_filters", "n_epochs", "batch_size"]:
+        for name in ["max_window", "n_filters", "n_epochs", "batch_size"]:
             value = getattr(self, name)
             if not isinstance(value, int) or value <= 0:
                 raise ValueError(f"{name} must be a positive integer")
@@ -244,10 +254,14 @@ class XCMClassifier(BaseClassifier):
         tf.keras.utils.set_random_seed(seed)
 
         self.n_channels_, self.n_timepoints_ = X.shape[1], X.shape[2]
-        # The authors compute the kernel length as int(window_size * n), which is
-        # zero for short series and would build an invalid layer.
-        self.window_size_ = max(1, int(self.window_size * self.n_timepoints_))
-        effective = self.window_size_ / self.n_timepoints_
+        # The authors compute the kernel length as int(window_size * n), which
+        # is zero for short series and unboundedly large for long ones.
+        self.window_size_ = min(
+            max(1, int(self.window_size * self.n_timepoints_)), self.max_window
+        )
+        # _build_xcm takes a fraction, as the authors' function does, so convert
+        # back. The half point guards against int() rounding the fraction down.
+        effective = (self.window_size_ + 0.5) / self.n_timepoints_
 
         self.model_ = _build_xcm(
             self.n_timepoints_,
@@ -298,7 +312,7 @@ class XCMClassifier(BaseClassifier):
     def _get_test_params(cls, parameter_set: str = "default") -> dict:
         """Return a small parameter set for aeon estimator checks."""
         return {
-            "window_size": 0.2,
+            "window_size": 0.8,
             "n_filters": 4,
             "n_epochs": 2,
             "batch_size": 4,

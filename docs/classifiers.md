@@ -110,10 +110,14 @@ Mathematics, 9(23), 2021.
 This is the only Keras port here, following the authors, so it needs `tensorflow`
 rather than `torch`. Both are in the `deep-learning` extra.
 
-Note that the authors tune `window_size` per dataset: their results table carries a
-`Win_pct` column, 20 for most datasets but 40 for others. The default here is their
-0.2. On NATOPS, where they used 40, we get 0.911 at 0.2 and 0.933 at 0.4 against a
-published 0.978, so matching their window closes part but not all of the gap.
+The authors tune `window_size` per dataset. Their results table carries a `Win_pct`
+column spread over a five point grid: 20, 40 and 60 on five datasets each, 80 on
+thirteen, and 100 on two. The default here is **0.8**, the value they use most often.
+The 0.2 in their `config.yml` is the worked example for BasicMotions, not a default.
+
+Because `window_size` is a fraction, the kernel grows with the series, and 0.8 of
+EigenWorms' 17984 points would be a 14387 point kernel. `max_window` bounds the kernel
+at 100 points, and it is floored at 1 for very short series.
 
 ## Notes on the ports
 
