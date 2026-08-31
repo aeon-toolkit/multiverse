@@ -27,6 +27,12 @@ The current paper version describes:
 - 147 released datasets when preprocessing variants are included
 - a curated 66 dataset subset, **Multiverse-core (MV-core)**, for algorithm benchmarking
 
+**[View the Multiverse-core leaderboard](https://raw.githack.com/aeon-toolkit/multiverse/main/results/multiverse/leaderboard.html)** —
+average score and rank for every classifier we have results for, on the datasets they
+all completed. Rebuilt with `python -m multiverse.experiments.tables`; the page itself
+is [`results/multiverse/leaderboard.html`](results/multiverse/leaderboard.html), which
+GitHub shows as source rather than rendering, hence the preview link.
+
 This repository aims to make it easier to:
 
 - load Multiverse datasets through `aeon`

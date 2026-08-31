@@ -735,11 +735,17 @@ def main() -> None:
 
     Uses every estimator with results in the repository, including the Dummy
     baseline, over the Multiverse-core datasets all of them have results for.
+
+    DisjointCNN is held back. Its results are in the repository but they are
+    around 20 accuracy points below the authors' published numbers on all 23
+    shared datasets, so the run measures aeon's implementation rather than the
+    method, and listing it would read as a claim about the method. Remove it
+    from ``exclude`` once that is resolved.
     """
     from aeon.datasets.tsc_datasets import multiverse_core
 
     datasets = sorted(multiverse_core)
-    estimators = available_estimators()
+    estimators = available_estimators(exclude=("DisjointCNN",))
     print(f"estimators: {', '.join(estimators)}")
 
     path = leaderboard(
