@@ -1,5 +1,3 @@
-You can find the archive datasets on Zenodo here: https://zenodo.org/communities/tsml/records?q=&f=subject%3Auea%20archive&l=list&p=1&s=20&sort=newest
-
 this is a work in progress
 ---
 
@@ -59,49 +57,38 @@ This repository aims to make it easier to:
 
 ## Installation
 
-You can install from pip, 
-
-
-```bash
-git clone https://github.com/aeon-toolkit/multiverse.git
-cd multiverse
-pip install -e .
-```
-
-but at present, the best route is to install from source, since it is changing rapidly.
-
-This repository depends on `aeon` and uses the `aeon` dataset loading interface as 
-the main public API for archive access.
-
-## Quick start
-
-
-At present, the safest route is to install from source.
-
-```bash
-git clone https://github.com/aeon-toolkit/multiverse.git
-cd multiverse
-pip install -e .
-```
-
-This repository depends on `aeon` and uses the `aeon` dataset loading interface as the main public API for archive access.
-
-## Quick start
-
 Install the release package from PyPI:
 
 ```bash
 pip install aeon-multiverse
 ```
-or install the development version from GitHub:
+
+or the development version from GitHub:
 
 ```bash
 pip install git+https://github.com/aeon-toolkit/multiverse.git
 ```
 
+At present the safest route is to install from source, since the package is changing
+rapidly:
+
+```bash
+git clone https://github.com/aeon-toolkit/multiverse.git
+cd multiverse
+pip install -e .
+```
+
+This repository depends on `aeon` and uses the `aeon` dataset loading interface as the
+main public API for archive access.
+
+## Quick start
+
 ### Load a dataset
 
-Use ``aeon`` to download data from zenodo and load into memory.
+The archive datasets are published on Zenodo, in the
+[tsml community](https://zenodo.org/communities/tsml/records?q=&f=subject%3Auea%20archive&l=list&p=1&s=20&sort=newest).
+You do not need to download them by hand: use ``aeon`` to fetch a dataset from Zenodo and
+load it into memory.
 
 ```python
 from aeon.datasets import load_classification
