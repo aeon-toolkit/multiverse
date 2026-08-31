@@ -18,6 +18,7 @@ from multiverse.classification import (
     TimesNetClassifier,
     TimesURLClassifier,
     TS2VecClassifier,
+    XCMClassifier,
 )
 from multiverse.classification._convtran import _ConvTranNetwork
 from multiverse.classification._patchmtsc import _PatchMTSCNetwork
@@ -64,6 +65,13 @@ SMALL_PARAMS = {
         "batch_size": 4,
         "probe": "logistic",
         "device": "cpu",
+        "random_state": 0,
+    },
+    XCMClassifier: {
+        "window_size": 0.2,
+        "n_filters": 4,
+        "n_epochs": 2,
+        "batch_size": 4,
         "random_state": 0,
     },
     TimesNetClassifier: {

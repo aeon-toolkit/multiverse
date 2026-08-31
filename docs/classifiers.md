@@ -29,6 +29,7 @@ from multiverse.classification import (
     TimesNetClassifier,
     TimesURLClassifier,
     TS2VecClassifier,
+    XCMClassifier,
 )
 ```
 
@@ -91,6 +92,29 @@ For UEA the authors evaluate with a support vector machine chosen by grid search
 "logistic"` selects their linear alternative, which is the probe TimesURL uses, so the
 two encoders can be compared without the probe differing between them.
 
+## XCM
+
+XCM is an explainable convolutional network. Two parallel branches see the input
+differently: a 2D branch convolves along time within each channel separately, so its
+activations stay attributable to individual channels, and a 1D branch convolves along
+time across all channels together. The branches are concatenated, passed through a
+further 1D convolution, globally average pooled and classified. The channel
+attributability of the 2D branch is what the paper's explanations rest on, so the
+layer names it refers to are preserved. Ported from the authors'
+[implementation](https://github.com/XAIseries/XCM).
+
+Fauvel, K., Lin, T., Masson, V., Fromont, E. and Termier, A. "XCM: An Explainable
+Convolutional Neural Network for Multivariate Time Series Classification."
+Mathematics, 9(23), 2021.
+
+This is the only Keras port here, following the authors, so it needs `tensorflow`
+rather than `torch`. Both are in the `deep-learning` extra.
+
+Note that the authors tune `window_size` per dataset: their results table carries a
+`Win_pct` column, 20 for most datasets but 40 for others. The default here is their
+0.2. On NATOPS, where they used 40, we get 0.911 at 0.2 and 0.933 at 0.4 against a
+published 0.978, so matching their window closes part but not all of the gap.
+
 ## Notes on the ports
 
 All three wrappers take aeon's ``numpy3D`` collections, shape
@@ -109,6 +133,7 @@ package: install it with ``pip install aeon-multiverse[deep-learning]``.
 | PatchMTSC | [YanxuanWei/PatchMTSC](https://github.com/YanxuanWei/PatchMTSC) | `Models/model.py`, `Models/Attention.py`, `Models/AbsolutePositionalEncoding.py` |
 | TimesURL | [Alrash/TimesURL](https://github.com/Alrash/TimesURL) | the whole model package, vendored under `_timesurl_original` |
 | TS2Vec | [zhihanyue/ts2vec](https://github.com/zhihanyue/ts2vec) | `ts2vec.py`, `utils.py`, `models/`, vendored under `_ts2vec_original` |
+| XCM | [XAIseries/XCM](https://github.com/XAIseries/XCM) | `models/xcm.py` |
 
 ConvTran, PatchMTSC and TimesNet are each a single self-contained module. TimesURL and
 TS2Vec are vendored instead, under `_timesurl_original` and `_ts2vec_original`, and
@@ -145,6 +170,8 @@ faithful transcription.
 | Python's ``random`` seeded alongside numpy and torch | TimesURL | The authors' collator draws from ``random`` for segment masking and index shuffling, so seeding numpy and torch alone left runs irreproducible |
 | ``multi_class`` dropped from the probe | TimesURL | The authors pass ``multi_class="auto"``, deprecated in scikit-learn 1.5 and removed in 1.8. The default already matches its behaviour here |
 | ``probability=True`` on the SVM probe | TS2Vec | The authors' grid sets it False, which leaves an ``SVC`` unable to produce probability estimates. aeon classifiers must implement ``predict_proba``, so it is enabled, adding Platt scaling fitted by internal cross-validation on the training data |
+| Layer imports taken from ``tensorflow.keras.layers`` | XCM | The original imports ``Conv1D`` and ``Conv2D`` from ``keras.layers.convolutional``, a path removed in Keras 3. The layers and their arguments are unchanged |
+| Kernel length floored at one point | XCM | The original computes ``int(window_size * n)``, which is zero for series shorter than five points and builds an invalid layer |
 | Validation split moved inside ``fit`` | all three | The originals split train/validation outside the model, which risks leakage between train and test. TSLib is explicit about it: ``exp_classification.py`` sets ``vali_data = self._get_data(flag='TEST')``, so it selects the retained epoch on the test set. See the note at the top of this page |
 | Test data scaled with training statistics | TimesNet | TSLib fits its normaliser separately per split, so its test set is scaled by its own statistics. The port fits on train and applies to test |
 
@@ -192,6 +219,7 @@ tests record which ports have which:
 | ConvTran | yes | yes |
 | TimesURL | vendored verbatim, so identical by construction | n/a |
 | TS2Vec | vendored verbatim, so identical by construction | n/a |
+| XCM | yes, the built graph matches layer for layer with equal parameter counts | n/a, Keras rather than torch |
 | PatchMTSC | yes | no, the original's head is an ``nn.LazyLinear`` that draws its weights on the first forward pass rather than at construction |
 | TimesNet | yes | no, TSLib always builds a temporal embedding that the classification path never applies; dropping it removes one weight tensor and shifts every later draw |
 
@@ -208,6 +236,7 @@ export MULTIVERSE_PATCHMTSC_SRC=/path/to/PatchMTSC
 export MULTIVERSE_TIMESNET_SRC=/path/to/Time-Series-Library
 export MULTIVERSE_TIMESURL_SRC=/path/to/TimesURL/model/modules
 export MULTIVERSE_TS2VEC_SRC=/path/to/ts2vec
+export MULTIVERSE_XCM_SRC=/path/to/XCM
 pytest multiverse/classification/tests/test_original_equivalence.py -v
 ```
 

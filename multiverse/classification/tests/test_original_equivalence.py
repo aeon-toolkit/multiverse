@@ -24,6 +24,7 @@ skip unless the relevant source tree is pointed at by an environment variable:
     MULTIVERSE_TIMESNET_SRC   root of https://github.com/thuml/Time-Series-Library
     MULTIVERSE_TIMESURL_SRC   directory holding the authors' TimesURL modules
     MULTIVERSE_TS2VEC_SRC     root of https://github.com/zhihanyue/ts2vec
+    MULTIVERSE_XCM_SRC        root of https://github.com/XAIseries/XCM
 
 The originals import ``einops`` and ``pandas``; the ports do not.
 """
@@ -671,3 +672,75 @@ def test_ts2vec_svm_probe_matches_the_authors_grid():
     assert set(grid.param_grid["C"][:-1]) == {
         0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000
     }
+
+
+# ---------------------------------------------------------------------------
+# XCM
+# ---------------------------------------------------------------------------
+
+# XCM is transcribed rather than vendored: the network is one 97 line Keras
+# function. Equivalence is checked by building both and comparing the graphs,
+# which catches a changed layer, argument or ordering.
+
+
+def _original_xcm():
+    root = os.environ.get("MULTIVERSE_XCM_SRC")
+    if not root:
+        pytest.skip("MULTIVERSE_XCM_SRC is not set; skipping equivalence test")
+    root = Path(root)
+    if not (root / "models" / "xcm.py").is_file():
+        pytest.skip(f"{root} does not look like the XCM repository")
+
+    # their module imports a Keras path removed in Keras 3, so load the source
+    # and patch that one import rather than editing their working tree
+    source = (root / "models" / "xcm.py").read_text(encoding="utf-8")
+    source = source.replace(
+        "from keras.layers.convolutional import Conv1D, Conv2D",
+        "from tensorflow.keras.layers import Conv1D, Conv2D",
+    ).replace("from keras.", "from tensorflow.keras.")
+    namespace = {}
+    exec(compile(source, "<xcm_original>", "exec"), namespace)
+    return namespace["xcm"]
+
+
+def _layer_summary(model):
+    """Layer types and their shape-determining arguments, in order."""
+    summary = []
+    for layer in model.layers:
+        config = layer.get_config()
+        keys = [k for k in ("filters", "kernel_size", "strides", "padding",
+                            "units", "activation", "target_shape") if k in config]
+        summary.append((type(layer).__name__, tuple((k, config[k]) for k in keys)))
+    return summary
+
+
+def test_xcm_network_matches_the_authors():
+    """The transcribed network is the authors' graph, layer for layer."""
+    original_xcm = _original_xcm()
+    from multiverse.classification._xcm import _build_xcm
+
+    n_timepoints, n_channels, n_classes, window, filters = 100, 6, 4, 0.2, 8
+
+    theirs = original_xcm(
+        input_shape=(n_timepoints, n_channels),
+        n_class=n_classes,
+        window_size=window,
+        filters_num=filters,
+    )
+    ours = _build_xcm(n_timepoints, n_channels, n_classes, window, filters)
+
+    assert _layer_summary(ours) == _layer_summary(theirs)
+    assert ours.count_params() == theirs.count_params()
+    assert ours.output_shape == theirs.output_shape
+
+
+def test_xcm_named_layers_are_preserved():
+    """The paper's explanations refer to layers by name, so keep the names."""
+    _original_xcm()
+    from multiverse.classification._xcm import _build_xcm
+
+    model = _build_xcm(100, 6, 4, 0.2, 8)
+    names = {layer.name for layer in model.layers}
+    for required in ["2D", "2D_Activation", "2D_Reduced", "1D", "1D_Activation",
+                     "1D_Reduced", "1D_Final", "1D_Final_Activation"]:
+        assert required in names, f"layer {required} is missing"
