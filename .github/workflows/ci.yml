@@ -20,17 +20,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
+      # The ported classifiers need torch, which is an optional extra, so the
+      # deep-learning extra has to be installed for the tests to import.
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
+          python -m pip install -e ".[deep-learning,test]"
 
       - name: Import check
         run: |
-          python -c "import multiverse; print(multiverse.__file__)"
+          python -c "import multiverse; print(multiverse.__version__)"
+          python -c "from multiverse.classification import ConvTranClassifier, PatchMTSCClassifier, TimesNetClassifier, TimesURLClassifier; print('classifiers import')"
 
-      - name: Basic package check
+      # Every script under experiments/ and examples/ is an entry point the
+      # README sends people to, so a syntax error in one is a user-facing break.
+      - name: Compile every module
+        run: |
+          python -m compileall -q multiverse
+
+      - name: Run tests
+        run: |
+          python -m pytest multiverse -v --durations=10
+
+      # The equivalence tests skip unless the original sources are present, so
+      # they never run above. Fail if they stop being collectable at all.
+      - name: Equivalence tests are collectable
+        run: |
+          python -m pytest multiverse/classification/tests/test_original_equivalence.py --collect-only -q
+
+      - name: Package metadata
         run: |
           python -c "import importlib.metadata as md; print(md.version('aeon-multiverse'))"
 

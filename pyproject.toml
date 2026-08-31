@@ -57,6 +57,9 @@ dependencies = [
 deep-learning = [
     "torch>=2.0",
 ]
+test = [
+    "pytest>=7.0",
+]
 
 [tool.setuptools.packages.find]
 include = ["multiverse*"]
