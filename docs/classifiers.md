@@ -28,6 +28,7 @@ from multiverse.classification import (
     PatchMTSCClassifier,
     TimesNetClassifier,
     TimesURLClassifier,
+    TS2VecClassifier,
 )
 ```
 
@@ -74,6 +75,22 @@ probe classifies them. Ported from the authors'
 Liu, J. and Chen, S. "TimesURL: Self-supervised Contrastive Learning for Universal Time
 Series Representation Learning." AAAI, 2024.
 
+## TS2Vec
+
+TS2Vec is a self-supervised representation learner: a hierarchical contrastive objective
+pretrains an encoder, the collection is encoded to one vector per series, and a
+classifier is fitted on the representations. It is the direct comparator to TimesURL,
+which is built on its codebase. Ported from the authors'
+[implementation](https://github.com/zhihanyue/ts2vec).
+
+Yue, Z., Wang, Y., Duan, J., Yang, T., Huang, C., Tong, Y. and Xu, B. "TS2Vec: Towards
+Universal Representation of Time Series." AAAI, 2022.
+
+For UEA the authors evaluate with a support vector machine chosen by grid search over C
+(`train.py` passes `eval_protocol='svm'`), so `probe="svm"` is the default. `probe=
+"logistic"` selects their linear alternative, which is the probe TimesURL uses, so the
+two encoders can be compared without the probe differing between them.
+
 ## Notes on the ports
 
 All three wrappers take aeon's ``numpy3D`` collections, shape
@@ -91,11 +108,17 @@ package: install it with ``pip install aeon-multiverse[deep-learning]``.
 | ConvTran | [Navidfoumani/ConvTran](https://github.com/Navidfoumani/ConvTran), commit `148afb6` | `Models/model.py`, `Models/Attention.py`, `Models/AbsolutePositionalEncoding.py`, `Models/optimizers.py` |
 | PatchMTSC | [YanxuanWei/PatchMTSC](https://github.com/YanxuanWei/PatchMTSC) | `Models/model.py`, `Models/Attention.py`, `Models/AbsolutePositionalEncoding.py` |
 | TimesURL | [Alrash/TimesURL](https://github.com/Alrash/TimesURL) | the whole model package, vendored under `_timesurl_original` |
+| TS2Vec | [zhihanyue/ts2vec](https://github.com/zhihanyue/ts2vec) | `ts2vec.py`, `utils.py`, `models/`, vendored under `_ts2vec_original` |
 
-ConvTran, PatchMTSC and TimesNet are each a single self-contained module. TimesURL is
-the exception: its implementation spans 11 modules and about 2,300 lines, so it is
-vendored under `multiverse/classification/_timesurl_original` and driven by a thin
-wrapper, rather than inlined. Only the components the published
+ConvTran, PatchMTSC and TimesNet are each a single self-contained module. TimesURL and
+TS2Vec are vendored instead, under `_timesurl_original` and `_ts2vec_original`, and
+driven by thin wrappers: they are whole model packages rather than single networks, at
+about 2,300 and 630 lines respectively.
+
+Note that TimesURL is a fork of TS2Vec, not a user of it. Its copies of `encoder.py` and
+`losses.py` are modified: the loss calls mixup variants that TS2Vec does not have, and
+the encoder carries a reconstruction head. The two vendored packages are therefore kept
+separate rather than sharing a base. Only the components the published
 architecture actually reaches are reproduced: for ConvTran and PatchMTSC that is the
 ``tAPE`` fixed encoding and ``eRPE`` relative encoding path, so the alternative
 encodings (``Sin``, ``Learn``, ``Vector``) and the unused ``Transformer`` and
@@ -121,6 +144,7 @@ faithful transcription.
 | One unconditional ``print`` silenced | TimesURL | ``lib.py`` printed the training tensor shape on every fit, which would pollute benchmark logs. ``verbose`` controls training output instead |
 | Python's ``random`` seeded alongside numpy and torch | TimesURL | The authors' collator draws from ``random`` for segment masking and index shuffling, so seeding numpy and torch alone left runs irreproducible |
 | ``multi_class`` dropped from the probe | TimesURL | The authors pass ``multi_class="auto"``, deprecated in scikit-learn 1.5 and removed in 1.8. The default already matches its behaviour here |
+| ``probability=True`` on the SVM probe | TS2Vec | The authors' grid sets it False, which leaves an ``SVC`` unable to produce probability estimates. aeon classifiers must implement ``predict_proba``, so it is enabled, adding Platt scaling fitted by internal cross-validation on the training data |
 | Validation split moved inside ``fit`` | all three | The originals split train/validation outside the model, which risks leakage between train and test. TSLib is explicit about it: ``exp_classification.py`` sets ``vali_data = self._get_data(flag='TEST')``, so it selects the retained epoch on the test set. See the note at the top of this page |
 | Test data scaled with training statistics | TimesNet | TSLib fits its normaliser separately per split, so its test set is scaled by its own statistics. The port fits on train and applies to test |
 
@@ -167,6 +191,7 @@ tests record which ports have which:
 |---|---|---|
 | ConvTran | yes | yes |
 | TimesURL | vendored verbatim, so identical by construction | n/a |
+| TS2Vec | vendored verbatim, so identical by construction | n/a |
 | PatchMTSC | yes | no, the original's head is an ``nn.LazyLinear`` that draws its weights on the first forward pass rather than at construction |
 | TimesNet | yes | no, TSLib always builds a temporal embedding that the classification path never applies; dropping it removes one weight tensor and shifts every later draw |
 
@@ -182,6 +207,7 @@ export MULTIVERSE_CONVTRAN_SRC=/path/to/ConvTran
 export MULTIVERSE_PATCHMTSC_SRC=/path/to/PatchMTSC
 export MULTIVERSE_TIMESNET_SRC=/path/to/Time-Series-Library
 export MULTIVERSE_TIMESURL_SRC=/path/to/TimesURL/model/modules
+export MULTIVERSE_TS2VEC_SRC=/path/to/ts2vec
 pytest multiverse/classification/tests/test_original_equivalence.py -v
 ```
 

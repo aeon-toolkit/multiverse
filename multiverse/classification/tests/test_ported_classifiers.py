@@ -17,6 +17,7 @@ from multiverse.classification import (
     PatchMTSCClassifier,
     TimesNetClassifier,
     TimesURLClassifier,
+    TS2VecClassifier,
 )
 from multiverse.classification._convtran import _ConvTranNetwork
 from multiverse.classification._patchmtsc import _PatchMTSCNetwork
@@ -52,6 +53,16 @@ SMALL_PARAMS = {
         "n_iters": 2,
         "batch_size": 4,
         "probe_max_iter": 50,
+        "device": "cpu",
+        "random_state": 0,
+    },
+    TS2VecClassifier: {
+        "output_dims": 8,
+        "hidden_dims": 8,
+        "depth": 2,
+        "n_iters": 2,
+        "batch_size": 4,
+        "probe": "logistic",
         "device": "cpu",
         "random_state": 0,
     },
@@ -256,3 +267,34 @@ def test_timesnet_lr_schedule_is_off_by_default():
     for epoch in [5, 10, 15, 30]:
         assert classifier._adjust_learning_rate(optimiser, epoch) is None
     assert optimiser.param_groups[0]["lr"] == 1e-3
+
+
+def test_ts2vec_probes_agree_on_shape_and_differ_in_fit():
+    """Both probes work, and they are genuinely different classifiers."""
+    X, y = make_example_3d_numpy(
+        n_cases=20, n_channels=2, n_timepoints=20, n_labels=2, random_state=0
+    )
+    params = dict(SMALL_PARAMS[TS2VecClassifier])
+    del params["probe"]
+
+    svm = TS2VecClassifier(**params, probe="svm").fit(X, y)
+    logistic = TS2VecClassifier(**params, probe="logistic").fit(X, y)
+
+    assert svm.predict_proba(X).shape == logistic.predict_proba(X).shape
+    assert type(svm.probe_) is not type(logistic.probe_)
+
+
+def test_ts2vec_rejects_unknown_probe():
+    X, y = make_example_3d_numpy(
+        n_cases=12, n_channels=2, n_timepoints=16, n_labels=2, random_state=0
+    )
+    classifier = TS2VecClassifier(**dict(SMALL_PARAMS[TS2VecClassifier], probe="knn"))
+    with pytest.raises(ValueError, match="probe"):
+        classifier.fit(X, y)
+
+
+def test_ts2vec_default_iterations_follow_the_authors():
+    """n_iters defaults to 200 for small collections and 600 for larger ones."""
+    classifier = TS2VecClassifier()
+    assert classifier.n_iters is None and classifier.n_epochs is None
+    assert classifier.probe == "svm"

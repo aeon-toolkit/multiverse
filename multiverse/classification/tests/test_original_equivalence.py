@@ -23,6 +23,7 @@ skip unless the relevant source tree is pointed at by an environment variable:
     MULTIVERSE_PATCHMTSC_SRC  root of https://github.com/YanxuanWei/PatchMTSC
     MULTIVERSE_TIMESNET_SRC   root of https://github.com/thuml/Time-Series-Library
     MULTIVERSE_TIMESURL_SRC   directory holding the authors' TimesURL modules
+    MULTIVERSE_TS2VEC_SRC     root of https://github.com/zhihanyue/ts2vec
 
 The originals import ``einops`` and ``pandas``; the ports do not.
 """
@@ -523,8 +524,7 @@ def test_timesnet_random_stream_differs_from_original():
 # than by transferring weights between two implementations.
 
 TIMESURL_ALLOWED_DIFFS = {
-    "__init__.py",       # stray import dropped, docstring added
-    "lib.py",            # unconditional print silenced
+    "__init__.py",  # stray package-level import dropped, docstring added
 }
 
 
@@ -571,16 +571,20 @@ def test_timesurl_vendored_copy_matches_upstream():
     assert compared > 0
 
 
-def test_timesurl_silenced_print_is_the_only_change_to_lib():
-    """The only edit to lib.py is the removal of one unconditional print."""
-    upstream, vendored = _timesurl_sources()
-    original = (upstream / "lib.py").read_text(encoding="utf-8").splitlines()
-    ported = (vendored / "lib.py").read_text(encoding="utf-8").splitlines()
+def test_timesurl_shape_print_is_guarded():
+    """The training shape print must not run unless verbose is asked for.
 
-    original = _normalise_imports("\n".join(original))
-    ported = set(_normalise_imports("\n".join(ported)))
-    removed = [line.strip() for line in original if line not in ported and line.strip()]
-    assert removed == ["print('X_train: ' + str(X_train.shape))"], removed
+    Upstream printed it on every fit, which pollutes benchmark logs. It is now
+    conditional; assert that rather than that it was deleted, so the guard
+    cannot be dropped without the test noticing.
+    """
+    _, vendored = _timesurl_sources()
+    source = (vendored / "lib.py").read_text(encoding="utf-8")
+
+    printed = "print('X_train: ' + str(X_train.shape))"
+    assert printed in source
+    guard = source[: source.index(printed)].rstrip().splitlines()[-1]
+    assert "verbose" in guard, f"the shape print is not guarded: {guard!r}"
 
 
 def test_timesurl_encoder_is_the_authors_class():
@@ -594,3 +598,76 @@ def test_timesurl_encoder_is_the_authors_class():
     y = np.array(["a", "b"] * 6)
     clf = TimesURLClassifier(**TimesURLClassifier._get_test_params()).fit(X, y)
     assert isinstance(clf.encoder_, TimesURL)
+
+
+# ---------------------------------------------------------------------------
+# TS2Vec
+# ---------------------------------------------------------------------------
+
+# Like TimesURL, TS2Vec is vendored rather than reimplemented. The only edit is
+# the relative-import rewrite in ts2vec.py, so equivalence is checked by
+# comparing the vendored modules against upstream.
+
+TS2VEC_ALLOWED_DIFFS = {"__init__.py"}  # docstring added at package level
+
+
+def _ts2vec_sources():
+    root = os.environ.get("MULTIVERSE_TS2VEC_SRC")
+    if not root:
+        pytest.skip("MULTIVERSE_TS2VEC_SRC is not set; skipping equivalence test")
+    root = Path(root)
+    if not root.is_dir():
+        pytest.skip(f"MULTIVERSE_TS2VEC_SRC={root} is not a directory")
+    import multiverse.classification._ts2vec_original as vendored
+
+    return root, Path(vendored.__file__).parent
+
+
+def test_ts2vec_vendored_copy_matches_upstream():
+    """Every vendored module is the authors' code, imports aside."""
+    upstream, vendored = _ts2vec_sources()
+
+    compared = 0
+    for path in sorted(vendored.rglob("*.py")):
+        relative = path.relative_to(vendored)
+        original = upstream / relative
+        if relative.name in TS2VEC_ALLOWED_DIFFS:
+            continue
+        if not original.is_file():
+            pytest.fail(f"{relative} has no upstream counterpart in {upstream}")
+        assert _normalise_imports(original.read_text(encoding="utf-8")) == (
+            _normalise_imports(path.read_text(encoding="utf-8"))
+        ), f"{relative} differs from upstream beyond the import rewrite"
+        compared += 1
+
+    assert compared >= 4
+
+
+def test_ts2vec_encoder_is_the_authors_class():
+    """The wrapper drives the authors' TS2Vec class, not a reimplementation."""
+    _ts2vec_sources()
+    from multiverse.classification._ts2vec_original.ts2vec import TS2Vec
+
+    from multiverse.classification import TS2VecClassifier
+
+    X = np.random.RandomState(0).rand(12, 2, 20)
+    y = np.array(["a", "b"] * 6)
+    clf = TS2VecClassifier(**TS2VecClassifier._get_test_params()).fit(X, y)
+    assert isinstance(clf.encoder_, TS2Vec)
+
+
+def test_ts2vec_svm_probe_matches_the_authors_grid():
+    """The SVM probe uses the authors' C grid from tasks/_eval_protocols.py."""
+    upstream, _ = _ts2vec_sources()
+    source = (upstream / "tasks" / "_eval_protocols.py").read_text(encoding="utf-8")
+
+    from multiverse.classification import TS2VecClassifier
+
+    clf = TS2VecClassifier(probe="svm")
+    clf.n_classes_ = 2
+    grid = clf._build_probe(n_cases=100, seed=0)
+    for value in ["0.0001", "0.001", "0.01", "0.1", "1", "10", "100", "1000", "10000"]:
+        assert value in source
+    assert set(grid.param_grid["C"][:-1]) == {
+        0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000
+    }
