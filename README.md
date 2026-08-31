@@ -1,5 +1,4 @@
-this is a work in progress
----
+This is a work in progress, we are adding results as we generate them.
 
 
 
@@ -54,7 +53,7 @@ The current paper version describes:
 | 22 | 1NN-DTW | 0.6712 | 0.6454 | 0.7197 | 0.6136 | 11.8506 | 0.6521 | 0.6636 | 17.82 |
 | 23 | Dummy | 0.3645 | 0.3029 | 0.5000 | 0.1507 | 1.4067 | 0.2855 | 0.3816 | 20.95 |
 
-Average over the 52 Multiverse-core datasets with results for every estimator on every metric, ordered by average accuracy rank. Best in each column in bold.
+Test results for default train/test split. All classifiers trained with default settings. Average over the 52 Multiverse-core datasets with results for every estimator on every metric, ordered by average accuracy rank. Best in each column in bold.
 <!-- LEADERBOARD:END -->
 
 Rebuilt with `python -m multiverse.experiments.tables`, which also writes a sortable
