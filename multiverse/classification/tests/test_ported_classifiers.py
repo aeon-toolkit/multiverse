@@ -164,7 +164,7 @@ def test_timesnet_learning_rate_schedule():
     """The TSLib ``type1`` schedule fires every five epochs and halves each time."""
     import torch
 
-    classifier = TimesNetClassifier(learning_rate=1e-3, n_epochs=30)
+    classifier = TimesNetClassifier(learning_rate=1e-3, n_epochs=30, lr_adjust="type1")
     parameter = torch.nn.Parameter(torch.zeros(1))
 
     for epoch, expected in [
@@ -237,3 +237,22 @@ def test_timesnet_rejects_invalid_parameters(params, message):
 
     with pytest.raises(ValueError, match=message):
         classifier.fit(X, y)
+
+
+def test_timesnet_lr_schedule_is_off_by_default():
+    """The default departs from TSLib, so pin it.
+
+    TSLib defaults to "type1", which decays the rate to near zero a third of the
+    way through a run. That is harmless there because they select the retained
+    epoch on the test set, but this wrapper selects on a held-out split of the
+    training data, so it would keep a model that had stopped learning.
+    """
+    import torch
+
+    classifier = TimesNetClassifier()
+    assert classifier.lr_adjust is None
+
+    optimiser = torch.optim.SGD([torch.nn.Parameter(torch.zeros(1))], lr=1e-3)
+    for epoch in [5, 10, 15, 30]:
+        assert classifier._adjust_learning_rate(optimiser, epoch) is None
+    assert optimiser.param_groups[0]["lr"] == 1e-3
