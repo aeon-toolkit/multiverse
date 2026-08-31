@@ -24,6 +24,8 @@ from __future__ import annotations
 __maintainer__ = ["TonyBagnall"]
 __all__ = [
     "leaderboard",
+    "leaderboard_markdown",
+    "write_markdown_table",
     "available_estimators",
     "load_metric",
     "load_missing_reasons",
@@ -730,6 +732,114 @@ def leaderboard(
     return output_path
 
 
+def leaderboard_markdown(
+    datasets,
+    estimators,
+    metrics=None,
+    sort_by: str = "accuracy",
+    results_dir: Path | str = DEFAULT_RESULTS_DIR,
+    decimals: int = 4,
+) -> str:
+    """Return the leaderboard as a Markdown table.
+
+    A narrower view than :func:`leaderboard`, meant for a README, where GitHub
+    renders Markdown but shows HTML as source. Each metric contributes a score
+    column, and only ``sort_by`` also gets its average rank, since a table with
+    a rank beside every score is too wide to read on a repository page.
+
+    Parameters
+    ----------
+    datasets : list of str
+        Datasets to consider.
+    estimators : list of str
+        Estimator names, matching their results directories.
+    metrics : list of str or None
+        Metrics to show as score columns. Defaults to every metric available.
+    sort_by : str, default="accuracy"
+        Metric whose average rank orders the rows and is shown as a column.
+    results_dir : Path or str
+        Directory holding one sub-directory per estimator.
+    decimals : int, default=4
+        Decimal places for scores.
+
+    Returns
+    -------
+    str
+        The table, followed by a line saying what it covers.
+    """
+    estimators = list(dict.fromkeys(estimators))
+    metrics = list(METRIC_LABELS) if metrics is None else list(dict.fromkeys(metrics))
+    frames = _load_all(estimators, metrics, results_dir)
+    metrics = [metric for metric in metrics if metric in frames]
+    if sort_by not in frames:
+        raise ValueError(f"sort_by={sort_by!r} is not available")
+
+    common, _ = _common_datasets(frames, datasets)
+    frames = {metric: frame.reindex(common) for metric, frame in frames.items()}
+
+    ranks = frames[sort_by].rank(axis=1, ascending=sort_by in LOWER_IS_BETTER).mean()
+    order = ranks.sort_values().index
+    scores = {metric: frames[metric].mean() for metric in metrics}
+
+    sort_label = METRIC_LABELS.get(sort_by, sort_by)
+    header = ["#", "Estimator"] + [
+        METRIC_LABELS.get(m, m) + (" &darr;" if m in LOWER_IS_BETTER else "")
+        for m in metrics
+    ] + [f"{sort_label} rank"]
+    rows = ["| " + " | ".join(header) + " |",
+            "|" + "---|" * len(header)]
+
+    best = {
+        m: (scores[m].min() if m in LOWER_IS_BETTER else scores[m].max())
+        for m in metrics
+    }
+    for position, estimator in enumerate(order, 1):
+        cells = [str(position), estimator]
+        for m in metrics:
+            value = scores[m][estimator]
+            text = f"{value:,.{1 if abs(value) >= 1000 else decimals}f}"
+            cells.append(f"**{text}**" if np.isclose(value, best[m]) else text)
+        rank = ranks[estimator]
+        cells.append(f"**{rank:.2f}**" if np.isclose(rank, ranks.min()) else f"{rank:.2f}")
+        rows.append("| " + " | ".join(cells) + " |")
+
+    rows.append("")
+    rows.append(
+        f"Average over the {len(common)} Multiverse-core datasets with results for every "
+        f"estimator on every metric, ordered by average {sort_label.lower()} rank. Best "
+        "in each column in bold."
+    )
+    return "\n".join(rows)
+
+
+def write_markdown_table(
+    path: Path | str, table: str, marker: str = "LEADERBOARD"
+) -> bool:
+    """Replace the marked block in a Markdown file with ``table``.
+
+    The block is delimited by ``<!-- MARKER:START -->`` and
+    ``<!-- MARKER:END -->`` comments, which survive in the rendered page, so the
+    table can be regenerated in place without disturbing the rest of the file.
+
+    Returns
+    -------
+    bool
+        True if the file was updated, False if the markers were not found.
+    """
+    path = Path(path)
+    start, end = f"<!-- {marker}:START -->", f"<!-- {marker}:END -->"
+    text = path.read_text(encoding="utf-8")
+    if start not in text or end not in text:
+        return False
+
+    head, rest = text.split(start, 1)
+    _, tail = rest.split(end, 1)
+    path.write_text(
+        f"{head}{start}\n{table}\n{end}{tail}", encoding="utf-8"
+    )
+    return True
+
+
 def main() -> None:
     """Build the Multiverse-core leaderboard.
 
@@ -755,6 +865,13 @@ def main() -> None:
         title="Multiverse-core leaderboard",
     )
     print(f"wrote {path}")
+
+    table = leaderboard_markdown(datasets, estimators, sort_by="accuracy")
+    readme = Path(__file__).resolve().parents[2] / "README.md"
+    if write_markdown_table(readme, table):
+        print(f"updated the table in {readme}")
+    else:
+        print(f"no LEADERBOARD markers in {readme}; Markdown table not written")
 
 
 if __name__ == "__main__":
