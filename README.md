@@ -25,11 +25,43 @@ The current paper version describes:
 - 147 released datasets when preprocessing variants are included
 - a curated 66 dataset subset, **Multiverse-core (MV-core)**, for algorithm benchmarking
 
-**[View the Multiverse-core leaderboard](https://raw.githack.com/aeon-toolkit/multiverse/main/results/multiverse/leaderboard.html)** —
-average score and rank for every classifier we have results for, on the datasets they
-all completed. Rebuilt with `python -m multiverse.experiments.tables`; the page itself
-is [`results/multiverse/leaderboard.html`](results/multiverse/leaderboard.html), which
-GitHub shows as source rather than rendering, hence the preview link.
+### Multiverse-core leaderboard
+
+<!-- LEADERBOARD:START -->
+| # | Estimator | Accuracy | Balanced accuracy | AUROC | F1 | Log loss &darr; | Sensitivity | Specificity | Accuracy rank |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | HC2 | **0.7909** | 0.7518 | **0.8990** | 0.7273 | **0.5383** | 0.7459 | **0.7943** | **7.64** |
+| 2 | MRHydra | 0.7837 | **0.7564** | 0.8105 | **0.7316** | 7.7974 | **0.7642** | 0.7757 | 8.14 |
+| 3 | RDST | 0.7734 | 0.7333 | 0.7912 | 0.6991 | 8.1667 | 0.7109 | 0.7874 | 9.02 |
+| 4 | RIST | 0.7720 | 0.7397 | 0.8748 | 0.7147 | 0.6218 | 0.7408 | 0.7655 | 9.60 |
+| 5 | DrCIF | 0.7747 | 0.7429 | 0.8813 | 0.7173 | 0.6484 | 0.7397 | 0.7708 | 9.86 |
+| 6 | FreshPRINCE | 0.7743 | 0.7487 | 0.8745 | 0.7211 | 0.6007 | 0.7414 | 0.7770 | 9.87 |
+| 7 | CIF | 0.7781 | 0.7471 | 0.8908 | 0.7212 | 0.6430 | 0.7441 | 0.7753 | 9.94 |
+| 8 | QUANT | 0.7720 | 0.7462 | 0.8831 | 0.7189 | 0.6175 | 0.7521 | 0.7581 | 10.29 |
+| 9 | Arsenal | 0.7680 | 0.7321 | 0.8457 | 0.7024 | 3.8631 | 0.7257 | 0.7732 | 10.41 |
+| 10 | ROCKET | 0.7690 | 0.7326 | 0.7925 | 0.7019 | 8.3249 | 0.7200 | 0.7764 | 10.58 |
+| 11 | LITETime-MV | 0.7506 | 0.7299 | 0.8513 | 0.6820 | 1.3206 | 0.7132 | 0.7637 | 10.92 |
+| 12 | STSF | 0.7724 | 0.7477 | 0.8804 | 0.7080 | 0.6432 | 0.7345 | 0.7826 | 11.29 |
+| 13 | H-InceptionTime | 0.7408 | 0.7190 | 0.8496 | 0.6838 | 1.3227 | 0.7223 | 0.7378 | 11.39 |
+| 14 | LiteTIME | 0.7341 | 0.7104 | 0.8394 | 0.6680 | 1.4776 | 0.7113 | 0.7336 | 12.08 |
+| 15 | PatchMTSC | 0.7428 | 0.6897 | 0.8261 | 0.6533 | 0.7655 | 0.6852 | 0.7352 | 12.77 |
+| 16 | ConvTran | 0.7462 | 0.7102 | 0.8592 | 0.6767 | 0.8190 | 0.7159 | 0.7345 | 12.89 |
+| 17 | Catch22 | 0.7475 | 0.7181 | 0.8697 | 0.6922 | 0.7147 | 0.7240 | 0.7374 | 12.93 |
+| 18 | STC | 0.7545 | 0.7172 | 0.8744 | 0.6940 | 0.6391 | 0.7185 | 0.7537 | 13.63 |
+| 19 | TSF | 0.7515 | 0.7236 | 0.8740 | 0.6883 | 0.7252 | 0.7093 | 0.7606 | 13.63 |
+| 20 | TDE | 0.7262 | 0.6813 | 0.8374 | 0.6382 | 0.8869 | 0.6714 | 0.7344 | 14.21 |
+| 21 | Summary | 0.6858 | 0.6574 | 0.8268 | 0.6230 | 0.9123 | 0.6574 | 0.6844 | 16.12 |
+| 22 | 1NN-DTW | 0.6712 | 0.6454 | 0.7197 | 0.6136 | 11.8506 | 0.6521 | 0.6636 | 17.82 |
+| 23 | Dummy | 0.3645 | 0.3029 | 0.5000 | 0.1507 | 1.4067 | 0.2855 | 0.3816 | 20.95 |
+
+Average over the 52 Multiverse-core datasets with results for every estimator on every metric, ordered by average accuracy rank. Best in each column in bold.
+<!-- LEADERBOARD:END -->
+
+Rebuilt with `python -m multiverse.experiments.tables`, which also writes a sortable
+version with per-metric ranks to
+[`results/multiverse/leaderboard.html`](results/multiverse/leaderboard.html)
+([preview](https://raw.githack.com/aeon-toolkit/multiverse/main/results/multiverse/leaderboard.html),
+since GitHub shows HTML as source). Missing results, and why, are listed on that page.
 
 This repository aims to make it easier to:
 
