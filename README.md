@@ -159,27 +159,34 @@ from aeon.classification.deep_learning import InceptionTimeClassifier
 Or explore published results explored in this repo - [`docs/results.md`](docs/results.md)
 
 ### Run an experiment
-To reproduce a benchmark run or evaluate a new classifier, start from:
-
 
 Results are generated with [`tsml_eval`](https://github.com/time-series-machine-learning/tsml-eval),
 which writes one file per classifier, dataset and resample in the format the tooling in
-this repository reads.
+this repository reads:
+
+```text
+<results_path>/<classifier>/Predictions/<dataset>/testResample<id>.csv
+```
+
+Set the data path, results path, classifiers and datasets at the top of `main` in one of:
 
 - [`multiverse/experiments/run_single_dataset.py`](multiverse/experiments/run_single_dataset.py)
   — one classifier on one dataset, the smallest complete example
 - [`multiverse/experiments/run_benchmark.py`](multiverse/experiments/run_benchmark.py)
-  — a set of classifiers over a set of datasets, defaulting to Multiverse-core
+  — a set of classifiers over Multiverse-core
 - [`multiverse/experiments/run_eeg_bakeoff.py`](multiverse/experiments/run_eeg_bakeoff.py)
   — the same, over the EEG archive
 
+then run it:
+
 ```bash
-python -m multiverse.experiments.run_benchmark     --data-path /path/to/Multiverse     --results-path ./results-raw     --classifiers ROCKET DrCIF ConvTran
+python -m multiverse.experiments.run_benchmark
 ```
 
-Existing results are skipped, so an interrupted run can be restarted. Running the full
-benchmark on one machine takes a very long time; the published results were distributed
-over a cluster.
+Combinations that already have results are skipped, so an interrupted run can be started
+again, and a failure is reported without ending the run. Running the full benchmark on
+one machine takes a very long time; the published results were distributed over a
+cluster.
 
 ### Donate your code and published results
 
