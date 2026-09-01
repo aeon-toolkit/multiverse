@@ -782,10 +782,13 @@ def leaderboard_markdown(
     scores = {metric: frames[metric].mean() for metric in metrics}
 
     sort_label = METRIC_LABELS.get(sort_by, sort_by)
-    header = ["#", "Estimator"] + [
+    # The rank column comes first because it is what orders the rows: with it at
+    # the far right the table looks mis-sorted on whichever metric happens to be
+    # leftmost.
+    header = ["#", "Estimator", f"{sort_label} rank"] + [
         METRIC_LABELS.get(m, m) + (" &darr;" if m in LOWER_IS_BETTER else "")
         for m in metrics
-    ] + [f"{sort_label} rank"]
+    ]
     rows = ["| " + " | ".join(header) + " |",
             "|" + "---|" * len(header)]
 
@@ -794,13 +797,16 @@ def leaderboard_markdown(
         for m in metrics
     }
     for position, estimator in enumerate(order, 1):
-        cells = [str(position), estimator]
+        rank = ranks[estimator]
+        cells = [
+            str(position),
+            estimator,
+            f"**{rank:.2f}**" if np.isclose(rank, ranks.min()) else f"{rank:.2f}",
+        ]
         for m in metrics:
             value = scores[m][estimator]
             text = f"{value:,.{1 if abs(value) >= 1000 else decimals}f}"
             cells.append(f"**{text}**" if np.isclose(value, best[m]) else text)
-        rank = ranks[estimator]
-        cells.append(f"**{rank:.2f}**" if np.isclose(rank, ranks.min()) else f"{rank:.2f}")
         rows.append("| " + " | ".join(cells) + " |")
 
     rows.append("")
