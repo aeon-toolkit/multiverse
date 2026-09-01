@@ -214,6 +214,7 @@ multiverse/
 ├── img/                     # Images used in the documentation
 ├── results/                 # Benchmark results, one directory per classifier
 ├── published_results/       # Accuracies reported in the MTSC literature
+├── survey/                  # Signpost only: the directory moved to published_results/
 └── multiverse/              # Python package
     ├── classification/      # Classifiers not available in aeon
     ├── examples/            # Short runnable examples
