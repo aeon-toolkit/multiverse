@@ -50,7 +50,7 @@ dependencies = [
     "tqdm>=4.66",
     "aeon>=1.4.0",
     "tsml_eval>=0.0",
-    "aeon_neuro>=0.1",
+    "aeon-neuro>=0.0.1",
 ]
 
 [project.optional-dependencies]
