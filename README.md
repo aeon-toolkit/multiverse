@@ -23,6 +23,12 @@ The archive is described in
 Classification](https://arxiv.org/abs/2603.20352) (arXiv:2603.20352). If you use the
 archive, please cite it; `CITATION.cff` has the full entry.
 
+The wider literature the archive is measured against is reviewed in
+[Benchmark-Driven Multivariate Time Series Classification: The Role of the UEA MTSC
+Archive](https://eprints.soton.ac.uk/512258/), a survey of 142 papers using the UEA
+archive. The accuracies it collected are in
+[`published_results/`](published_results/), and are what our runs are compared against.
+
 The current paper version describes:
 
 - 133 unique MTSC problems
@@ -207,7 +213,7 @@ multiverse/
 ├── docs/                    # Documentation
 ├── img/                     # Images used in the documentation
 ├── results/                 # Benchmark results, one directory per classifier
-├── survey/                  # Data behind the MTSC survey
+├── published_results/       # Accuracies reported in the MTSC literature
 └── multiverse/              # Python package
     ├── classification/      # Classifiers not available in aeon
     ├── examples/            # Short runnable examples
