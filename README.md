@@ -180,6 +180,11 @@ this repository reads:
 <results_path>/<classifier>/Predictions/<dataset>/testResample<id>.csv
 ```
 
+It is the `experiments` extra, `pip install aeon-multiverse[experiments]`, since only
+these scripts need it. Its current release pins `aeon<1.2.0` and so cannot yet be
+installed alongside this package; until the next release, use a checkout of `tsml_eval`
+`main`.
+
 Set the data path, results path, classifiers and datasets at the top of `main` in one of:
 
 - [`multiverse/experiments/run_single_dataset.py`](multiverse/experiments/run_single_dataset.py)

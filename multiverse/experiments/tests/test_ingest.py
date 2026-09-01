@@ -8,10 +8,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import multiverse.experiments.ingest as ingest_module
-from multiverse.experiments.ingest import ingest, metrics
-
+# Before importing the module under test: ingest imports tsml-eval at module
+# level, so without this the collection fails outright instead of skipping.
 pytest.importorskip("tsml_eval")
+
+import multiverse.experiments.ingest as ingest_module  # noqa: E402
+from multiverse.experiments.ingest import ingest, metrics  # noqa: E402
 
 
 def write_predictions(path, classifier, dataset, labels, predictions, resample=0):
