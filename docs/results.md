@@ -16,8 +16,8 @@ get_estimator_results(estimators=cls, datasets=data) # doctest: +SKIP
 
 We currently store the multiverse results in the results directory. Currently 
 only have accuracy for the default splits for subsets of the multiverse. This is 
-still a work in progress. You will soone be able to explore and download these results 
-interactively on the[multiverse website](COMING SOON).
+still a work in progress. You will soon be able to explore and download these results 
+interactively on the [multiverse website] (COMING SOON).
 
 The dataset lists are 
 
