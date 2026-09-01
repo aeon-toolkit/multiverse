@@ -35,13 +35,12 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: BSD License",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {file = "LICENSE"}
 dependencies = [
     "numpy>=1.23",
@@ -49,8 +48,6 @@ dependencies = [
     "requests>=2.31",
     "tqdm>=4.66",
     "aeon>=1.4.0",
-    "tsml_eval>=0.0",
-    "aeon_neuro>=0.1",
 ]
 
 [project.optional-dependencies]
@@ -60,6 +57,14 @@ deep-learning = [
 ]
 test = [
     "pytest>=7.0",
+]
+# Only the experiment drivers need tsml-eval, not the classifiers or the
+# result tables. It is an extra rather than a hard dependency because the
+# current release, 0.6.0, pins aeon<1.2.0, which cannot be installed beside
+# the aeon>=1.4.0 this package needs. tsml-eval's main branch already allows
+# aeon<1.6.0, so this becomes installable as soon as that is released.
+experiments = [
+    "tsml_eval>=0.6",
 ]
 
 [tool.setuptools.packages.find]

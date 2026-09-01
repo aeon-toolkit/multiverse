@@ -59,6 +59,7 @@ import numpy as np
 from aeon.classification import BaseClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -224,9 +225,15 @@ class TS2VecClassifier(BaseClassifier):
         over C. ``probability=True`` is set so that ``predict_proba`` exists.
         """
         if self.probe == "logistic":
+            # One-vs-rest, matching the authors' fit_lr and the TimesURL probe.
+            # They pass multi_class="ovr", removed in scikit-learn 1.8; without
+            # the wrapper this would quietly become multinomial and stop being
+            # the same probe TimesURL uses.
             return make_pipeline(
                 StandardScaler(),
-                LogisticRegression(max_iter=1000000, random_state=seed),
+                OneVsRestClassifier(
+                    LogisticRegression(max_iter=1000000, random_state=seed)
+                ),
             )
 
         svm = SVC(C=np.inf, gamma="scale", probability=True, random_state=seed)

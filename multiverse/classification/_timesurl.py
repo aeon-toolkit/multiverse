@@ -55,6 +55,7 @@ from types import SimpleNamespace
 import numpy as np
 from aeon.classification import BaseClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
@@ -356,12 +357,15 @@ class TimesURLClassifier(BaseClassifier):
             )
 
         if self.eval_protocol == "linear":
+            # The authors pass multi_class="ovr" to LogisticRegression. That
+            # argument was deprecated in scikit-learn 1.5 and removed in 1.8,
+            # where it raises TypeError; OneVsRestClassifier is the replacement
+            # scikit-learn's own deprecation notice points to, and keeps the
+            # one-vs-rest behaviour rather than silently becoming multinomial.
             return make_pipeline(
                 StandardScaler(),
-                LogisticRegression(
-                    random_state=0,
-                    max_iter=1_000_000,
-                    multi_class="ovr",
+                OneVsRestClassifier(
+                    LogisticRegression(random_state=0, max_iter=1_000_000)
                 ),
             ).fit(features, y)
 
