@@ -1,7 +1,8 @@
 # Runtime
 
-**Coming soon.** This page will hold runtime and memory comparisons across the
-Multiverse estimators.
+**Coming soon.** This page will hold runtime comparisons across the Multiverse
+estimators. Memory is a separate page, [memory](memory.md), for the same reasons and a
+few of its own.
 
 **We have not yet structured an experiment to compare runtime.** Every run behind the
 results in this repository was set up to measure predictive performance. Which partition
@@ -22,9 +23,9 @@ Every run already records timings. `tsml-eval` writes, per classifier, dataset a
 resample:
 
 - `fit_time` and `predict_time`, in seconds;
-- `memory_usage`, the peak memory during `fit`;
 - `benchmark_time`, the time that machine took to sort 1,000 seeded random arrays of
-  20,000 elements.
+  20,000 elements;
+- `memory_usage`, the peak memory during `fit`, which [memory](memory.md) covers.
 
 They are in the raw prediction files. What this repository ingests under `results/` is
 only the accuracy-style measures, one file per metric, so the timings have not been
@@ -59,12 +60,6 @@ faithful ports of the same paper can differ several-fold on time because the aut
 picked 500 epochs and the toolkit's default is 2000. Early stopping and best-epoch
 selection move it again. None of that is a fact about the architecture.
 
-**Memory is measured in one place and spent in another.** `memory_usage` is peak host
-memory during `fit`. A model doing all its work on a GPU can look inexpensive by that
-measure while occupying tens of gigabytes of device memory, which the figure never sees.
-Peak host memory and peak device memory are different quantities and only one is
-recorded.
-
 **Which device a run actually used is not reliably recorded.** In the version of the
 experiment tooling used for these runs, the device description inspects TensorFlow only,
 so a PyTorch estimator reports CPU whether or not it ran on a GPU. Any timing table built
@@ -88,4 +83,5 @@ configuration rather than trusted as written.
 - The device stated per run, from the job configuration.
 
 Until most of that is in place, this page stays empty. For the same reason the
-[leaderboard](leaderboard.md) carries no fit time, predict time or memory columns.
+[leaderboard](leaderboard.md) carries no fit time or predict time columns, and
+[memory](memory.md) is empty too.

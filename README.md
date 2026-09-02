@@ -101,6 +101,8 @@ This repository aims to make it easier to:
   ·
   <a href="docs/runtime.md">Runtime</a>
   ·
+  <a href="docs/memory.md">Memory</a>
+  ·
   <a href="docs/evaluation.md">Evaluation</a>
   ·
   <a href="docs/classifiers.md">Classifiers</a>
