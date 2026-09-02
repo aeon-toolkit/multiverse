@@ -74,6 +74,14 @@ version with per-metric ranks to
 ([preview](https://raw.githack.com/aeon-toolkit/multiverse/main/results/multiverse/leaderboard.html),
 since GitHub shows HTML as source). Missing results, and why, are listed on that page.
 
+The same command writes a per-dataset view to
+[`results/multiverse/datasets.html`](results/multiverse/datasets.html)
+([preview](https://raw.githack.com/aeon-toolkit/multiverse/main/results/multiverse/datasets.html)),
+which turns the question around: for each dataset it gives the Dummy floor, the median
+and best over the other estimators, which estimator was best, how much the best gained
+over Dummy, and how far apart the estimators were. It is sorted by that gain, so the
+problems where nothing yet beats the baseline come first.
+
 This repository aims to make it easier to:
 
 - load Multiverse datasets through `aeon`

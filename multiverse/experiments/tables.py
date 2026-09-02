@@ -24,6 +24,9 @@ from __future__ import annotations
 __maintainer__ = ["TonyBagnall"]
 __all__ = [
     "leaderboard",
+    "dataset_summary",
+    "dataset_page",
+    "dataset_markdown",
     "leaderboard_markdown",
     "write_markdown_table",
     "available_estimators",
@@ -41,6 +44,12 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_RESULTS_DIR = Path(__file__).resolve().parents[2] / "results" / "multiverse"
+
+#: A dataset whose best estimator gains no more than this over the baseline
+#: shows little signal; one whose best reaches SATURATED_BEST is solved.
+#: Both separate estimators poorly, for opposite reasons.
+NO_SIGNAL_GAIN = 0.05
+SATURATED_BEST = 0.99
 
 #: Metrics where a smaller value is a better result. Anything not listed here is
 #: treated as higher-is-better.
@@ -846,6 +855,293 @@ def write_markdown_table(
     return True
 
 
+def dataset_summary(
+    datasets,
+    estimators,
+    metric: str = "accuracy",
+    results_dir: Path | str = DEFAULT_RESULTS_DIR,
+    baseline: str = "Dummy",
+) -> pd.DataFrame:
+    """Summarise one metric per dataset rather than per estimator.
+
+    The leaderboard answers "which estimator is best"; this answers "what is
+    this dataset worth", which is the question an archive has to keep asking of
+    its own problems.
+
+    Unlike :func:`leaderboard` this does not restrict to the datasets every
+    estimator has results for. A dataset only some estimators finished is still
+    informative, so every dataset is kept and ``estimators`` records how many
+    contributed.
+
+    Parameters
+    ----------
+    datasets : list of str
+        Datasets to include, in any order.
+    estimators : list of str
+        Estimator names, matching their results directories.
+    metric : str
+        Metric to summarise.
+    results_dir : Path or str
+        Directory holding one sub-directory per estimator.
+    baseline : str
+        Estimator treated as the no-skill floor, excluded from best, worst,
+        median and spread. Pass None to keep it in.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per dataset, indexed by dataset name, with the baseline score,
+        the median, best and worst over the remaining estimators, the estimator
+        achieving the best, the gain over the baseline, the spread, and the
+        number of estimators contributing.
+    """
+    frames = _load_all(list(estimators), [metric], results_dir)
+    if metric not in frames:
+        raise ValueError(f"no results for metric {metric!r}")
+    scores = frames[metric].reindex(sorted(dict.fromkeys(datasets)))
+
+    others = scores.drop(columns=[baseline], errors="ignore")
+    lower_better = metric in LOWER_IS_BETTER
+    best = others.min(axis=1) if lower_better else others.max(axis=1)
+    worst = others.max(axis=1) if lower_better else others.min(axis=1)
+
+    # idxmin/idxmax raise on an all-NaN row, so only ask where there is a value.
+    winner = pd.Series(pd.NA, index=others.index, dtype=object)
+    present = others.notna().any(axis=1)
+    if present.any():
+        rows = others[present]
+        winner[present] = rows.idxmin(axis=1) if lower_better else rows.idxmax(axis=1)
+
+    summary = pd.DataFrame(
+        {
+            "baseline": scores[baseline] if baseline in scores else np.nan,
+            "median": others.median(axis=1),
+            "best": best,
+            "worst": worst,
+            "best_estimator": winner,
+            "estimators": others.notna().sum(axis=1),
+        }
+    )
+    # The results files carry a "Resamples:" header, which pandas takes as the
+    # index name and would otherwise appear as the first column heading.
+    summary.index.name = "dataset"
+    # Gain is how much skill the best estimator found beyond the baseline;
+    # spread is how much the choice of estimator mattered. Reporting a single
+    # range would conflate the two, and since the baseline is almost always the
+    # weakest entry that range would just restate the gain.
+    summary["gain"] = (
+        summary["baseline"] - summary["best"]
+        if lower_better
+        else summary["best"] - summary["baseline"]
+    )
+    summary["spread"] = (
+        summary["worst"] - summary["best"]
+        if lower_better
+        else summary["best"] - summary["worst"]
+    )
+    return summary
+
+
+def _dataset_table_html(summary, decimals) -> str:
+    """Render the per-dataset table, one row per dataset."""
+    head = (
+        '<th class="sortable" data-col="0" data-first="asc" data-type="text">'
+        "Dataset</th>"
+        '<th class="sortable" data-col="1" data-first="asc">Dummy</th>'
+        '<th class="sortable" data-col="2" data-first="desc">Median</th>'
+        '<th class="sortable" data-col="3" data-first="desc">Best</th>'
+        '<th class="sortable" data-col="4" data-first="asc" data-type="text">'
+        "Best estimator</th>"
+        '<th class="sortable" data-col="5" data-first="asc">Gain over dummy</th>'
+        '<th class="sortable" data-col="6" data-first="desc">Spread</th>'
+        '<th class="sortable" data-col="7" data-first="desc">Estimators</th>'
+    )
+
+    def number(value):
+        return "&mdash;" if pd.isna(value) else f"{value:.{decimals}f}"
+
+    rows = []
+    for dataset, row in summary.iterrows():
+        # Two flags worth seeing at a glance: nothing beat the baseline by much,
+        # and everything solves it. Both make a dataset weak at separating
+        # estimators, for opposite reasons.
+        classes = []
+        if pd.notna(row["gain"]) and row["gain"] <= NO_SIGNAL_GAIN:
+            classes.append("nosignal")
+        if pd.notna(row["best"]) and row["best"] >= SATURATED_BEST:
+            classes.append("saturated")
+        attribute = f' class="{" ".join(classes)}"' if classes else ""
+        winner = (
+            "&mdash;"
+            if pd.isna(row["best_estimator"])
+            else escape(str(row["best_estimator"]))
+        )
+        rows.append(
+            f"<tr{attribute}><td>{escape(str(dataset))}</td>"
+            f'<td>{number(row["baseline"])}</td>'
+            f'<td>{number(row["median"])}</td>'
+            f'<td class="best">{number(row["best"])}</td>'
+            f"<td>{winner}</td>"
+            f'<td>{number(row["gain"])}</td>'
+            f'<td>{number(row["spread"])}</td>'
+            f'<td>{int(row["estimators"])}</td></tr>'
+        )
+
+    return (
+        '<div class="scroll"><table id="leaderboard">'
+        f"<thead><tr>{head}</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
+    )
+
+
+def dataset_page(
+    datasets,
+    estimators,
+    metric: str = "accuracy",
+    results_dir: Path | str = DEFAULT_RESULTS_DIR,
+    baseline: str = "Dummy",
+    sort_by: str = "gain",
+    output_path: Path | str | None = None,
+    title: str | None = None,
+    decimals: int = 4,
+) -> Path:
+    """Write a self-contained page summarising one metric per dataset.
+
+    Parameters
+    ----------
+    datasets : list of str
+        Datasets to include.
+    estimators : list of str
+        Estimator names, matching their results directories.
+    metric : str
+        Metric to summarise.
+    results_dir : Path or str
+        Directory holding one sub-directory per estimator.
+    baseline : str
+        Estimator treated as the no-skill floor.
+    sort_by : str
+        Column to order rows by, one of the columns of
+        :func:`dataset_summary`. The default puts the datasets where the best
+        estimator gained least over the baseline at the top, because those are
+        the ones worth looking at.
+    output_path : Path or str, optional
+        Where to write. Defaults to ``datasets.html`` beside the results.
+    title : str, optional
+        Page heading.
+    decimals : int
+        Decimal places for scores.
+
+    Returns
+    -------
+    Path
+        The file written.
+    """
+    summary = dataset_summary(datasets, estimators, metric, results_dir, baseline)
+    if sort_by not in summary.columns:
+        raise ValueError(f"sort_by={sort_by!r} is not a column")
+    ascending = sort_by not in {"median", "best", "worst", "spread", "estimators"}
+    summary = summary.sort_values(sort_by, ascending=ascending, na_position="last")
+
+    label = METRIC_LABELS.get(metric, metric)
+    title = title or f"Multiverse datasets: {label.lower()}"
+    scored = int((summary["estimators"] > 0).sum())
+    no_signal = int(summary["gain"].le(NO_SIGNAL_GAIN).sum())
+    saturated = int(summary["best"].ge(SATURATED_BEST).sum())
+
+    parts = [
+        f"<h1>{escape(title)}</h1>",
+        f'<p class="sub">{scored} datasets &middot; {escape(label.lower())}'
+        f" &middot; best of up to {int(summary['estimators'].max())} estimators"
+        f" against the {escape(baseline)} baseline &middot; built "
+        f"{date.today().isoformat()}</p>",
+        _dataset_table_html(summary, decimals),
+        '<p class="note">One row per dataset. <strong>Dummy</strong> is the '
+        "no-skill floor. <strong>Median</strong>, <strong>best</strong> and "
+        "<strong>spread</strong> are over the other estimators, so the baseline "
+        "cannot flatter them. <strong>Gain over dummy</strong> is best minus "
+        "dummy, how much skill was found at all; <strong>spread</strong> is "
+        "best minus worst, how much the choice of estimator mattered. The two "
+        "answer different questions, and a single range would conflate them.</p>",
+        f'<p class="note">{no_signal} of {scored} datasets gained '
+        f"{NO_SIGNAL_GAIN:.2f} or less over the baseline (shaded amber) and "
+        f"{saturated} have a best of {SATURATED_BEST:.2f} or more (shaded "
+        "green). Both separate estimators poorly, for opposite reasons. Best is "
+        "a maximum over many estimators, so it is optimistic by construction: "
+        "read it as what the archive can currently do on a problem, not as what "
+        "any one method delivers.</p>",
+    ]
+
+    page = (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        f"<title>{escape(title)}</title><style>{_STYLE}"
+        "tr.nosignal td { background: rgba(214, 158, 46, .16); }"
+        "tr.saturated td { background: rgba(56, 161, 105, .14); }"
+        "</style></head>"
+        f"<body><main>{''.join(parts)}</main>"
+        f"<script>{_SCRIPT}</script></body></html>"
+    )
+
+    output_path = (
+        Path(results_dir) / "datasets.html"
+        if output_path is None
+        else Path(output_path)
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(page, encoding="utf-8")
+    return output_path
+
+
+def dataset_markdown(
+    datasets,
+    estimators,
+    metric: str = "accuracy",
+    results_dir: Path | str = DEFAULT_RESULTS_DIR,
+    baseline: str = "Dummy",
+    sort_by: str = "gain",
+    decimals: int = 4,
+) -> str:
+    """Return the per-dataset summary as a Markdown table."""
+    summary = dataset_summary(datasets, estimators, metric, results_dir, baseline)
+    ascending = sort_by not in {"median", "best", "worst", "spread", "estimators"}
+    summary = summary.sort_values(sort_by, ascending=ascending, na_position="last")
+
+    header = [
+        "Dataset", "Dummy", "Median", "Best", "Best estimator",
+        "Gain over dummy", "Spread", "Estimators",
+    ]
+    rows = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+
+    def number(value):
+        return "&mdash;" if pd.isna(value) else f"{value:.{decimals}f}"
+
+    for dataset, row in summary.iterrows():
+        winner = (
+            "&mdash;"
+            if pd.isna(row["best_estimator"])
+            else str(row["best_estimator"])
+        )
+        cells = [
+            str(dataset),
+            number(row["baseline"]),
+            number(row["median"]),
+            f'**{number(row["best"])}**',
+            winner,
+            number(row["gain"]),
+            number(row["spread"]),
+            str(int(row["estimators"])),
+        ]
+        rows.append("| " + " | ".join(cells) + " |")
+
+    rows.append("")
+    rows.append(
+        f"{METRIC_LABELS.get(metric, metric)} per dataset. Median, best and "
+        f"spread are over the estimators other than {baseline}. Gain over dummy "
+        "is best minus dummy; spread is best minus worst."
+    )
+    return "\n".join(rows)
+
+
 def main() -> None:
     """Build the Multiverse-core leaderboard.
 
@@ -871,6 +1167,14 @@ def main() -> None:
         title="Multiverse-core leaderboard",
     )
     print(f"wrote {path}")
+
+    datasets_path = dataset_page(
+        datasets,
+        estimators,
+        metric="accuracy",
+        title="Multiverse-core datasets: accuracy",
+    )
+    print(f"wrote {datasets_path}")
 
     table = leaderboard_markdown(datasets, estimators, sort_by="accuracy")
     readme = Path(__file__).resolve().parents[2] / "README.md"
