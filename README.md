@@ -99,6 +99,8 @@ This repository aims to make it easier to:
   ·
   <a href="docs/leaderboard.md">Leaderboard</a>
   ·
+  <a href="docs/runtime.md">Runtime</a>
+  ·
   <a href="docs/evaluation.md">Evaluation</a>
   ·
   <a href="docs/classifiers.md">Classifiers</a>
