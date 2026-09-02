@@ -1,12 +1,20 @@
 # Runtime
 
 **Coming soon.** This page will hold runtime and memory comparisons across the
-Multiverse estimators. Nothing is published here yet, deliberately: the numbers we
-currently hold are not comparable with each other, and publishing them would invite
-exactly the conclusions they cannot support.
+Multiverse estimators.
 
-The rest of this page records why, so that when the page is populated it is clear what
-the figures do and do not mean.
+**We have not yet structured an experiment to compare runtime.** Every run behind the
+results in this repository was set up to measure predictive performance. Which partition
+a classifier was queued on, how many cores it was given, how many epochs it trained for,
+whether a job was retried at a higher memory ceiling: all of those were chosen to get
+accurate results out at a reasonable cost, and none were held constant across estimators
+because nothing depended on it. The timings that came out are a by-product of that, not
+a measurement anyone designed.
+
+So nothing is published here yet, deliberately. Comparing runtime needs its own
+experiment, with the conditions below fixed in advance, and we have not run one. The
+rest of this page records what those conditions are, and why the figures we already hold
+cannot stand in for them.
 
 ## The measurements exist
 
@@ -23,7 +31,10 @@ only the accuracy-style measures, one file per metric, so the timings have not b
 brought across yet. That is a small piece of work; the reason it has not been done is
 below, not the effort.
 
-## Why the numbers are not comparable
+## Why the figures we hold cannot stand in
+
+Each of these is a condition a timing experiment would have to fix, and that these runs
+left free.
 
 **The runs are spread across different hardware.** Multiverse results have been produced
 on GPU partitions with H200 and A100 cards and on CPU-only nodes, with different core
