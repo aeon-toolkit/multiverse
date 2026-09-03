@@ -748,6 +748,7 @@ def leaderboard_markdown(
     sort_by: str = "accuracy",
     results_dir: Path | str = DEFAULT_RESULTS_DIR,
     decimals: int = 4,
+    collection: str = "Multiverse-core",
 ) -> str:
     """Return the leaderboard as a Markdown table.
 
@@ -770,6 +771,9 @@ def leaderboard_markdown(
         Directory holding one sub-directory per estimator.
     decimals : int, default=4
         Decimal places for scores.
+    collection : str
+        Name of the dataset collection, used in the caption so a table
+        built over a subset does not claim to cover the whole archive.
 
     Returns
     -------
@@ -820,7 +824,7 @@ def leaderboard_markdown(
 
     rows.append("")
     rows.append(
-        f"Average over the {len(common)} Multiverse-core datasets with results for every "
+        f"Average over the {len(common)} {collection} datasets with results for every "
         f"estimator on every metric, ordered by average {sort_label.lower()} rank. Best "
         "in each column in bold."
     )
@@ -1156,7 +1160,7 @@ def main() -> None:
     deleted, but listing them would read as a claim about the method. The
     Multiverse port of the same method reports under DisjointCNN.
     """
-    from aeon.datasets.tsc_datasets import multiverse_core
+    from aeon.datasets.tsc_datasets import UEA, multiverse_core
 
     datasets = sorted(multiverse_core)
     estimators = available_estimators(exclude=("DisjointCNN-Aeon",))
@@ -1177,6 +1181,28 @@ def main() -> None:
         title="Multiverse-core datasets: accuracy",
     )
     print(f"wrote {datasets_path}")
+
+    # The UEA archive is the older 30 dataset collection almost every published
+    # MTSC result is quoted on, so a table restricted to it is what a reader
+    # comparing against the literature actually needs. It is a subset view of
+    # the same runs, not a separate experiment.
+    uea_path = leaderboard(
+        sorted(UEA),
+        estimators,
+        sort_by="accuracy",
+        title="UEA leaderboard",
+        output_path=Path(DEFAULT_RESULTS_DIR) / "leaderboard_uea.html",
+    )
+    print(f"wrote {uea_path}")
+
+    docs = Path(__file__).resolve().parents[2] / "docs" / "leaderboard.md"
+    uea_table = leaderboard_markdown(
+        sorted(UEA), estimators, sort_by="accuracy", collection="UEA"
+    )
+    if write_markdown_table(docs, uea_table, marker="UEA_LEADERBOARD"):
+        print(f"updated the UEA table in {docs}")
+    else:
+        print(f"no UEA_LEADERBOARD markers in {docs}; Markdown table not written")
 
     table = leaderboard_markdown(datasets, estimators, sort_by="accuracy")
     readme = Path(__file__).resolve().parents[2] / "README.md"

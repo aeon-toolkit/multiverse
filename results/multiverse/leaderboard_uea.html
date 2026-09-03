@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>UEA leaderboard</title><style>
+:root {
+  --bg: #ffffff; --fg: #1a1a1a; --muted: #666666;
+  --line: #e0e0e0; --head: #f5f5f5; --best: #e8f4ec; --accent: #2b6cb0;
+  --stripe: #fafafa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181c; --fg: #e8e8e8; --muted: #9aa0a6;
+    --line: #30343a; --head: #212429; --best: #1e3226; --accent: #7aa7d9;
+    --stripe: #1b1e23;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+h2 { font-size: 1.15rem; margin: 2.5rem 0 .75rem; }
+.sub { color: var(--muted); margin: 0 0 2rem; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: .45rem .7rem; text-align: right; white-space: nowrap;
+  border-bottom: 1px solid var(--line); }
+th { background: var(--head); font-weight: 600; position: sticky; top: 0; }
+td.pos { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums;
+  width: 2.5rem; }
+th.pos { text-align: right; color: var(--muted); }
+th:nth-child(-n+2), td:nth-child(-n+2) { position: sticky; background: var(--bg); }
+td:nth-child(2), th:nth-child(2) { text-align: left; }
+th:nth-child(1), td:nth-child(1) { left: 0; }
+th:nth-child(2), td:nth-child(2) { left: 2.5rem; box-shadow: 1px 0 0 var(--line); }
+th:nth-child(-n+2) { background: var(--head); z-index: 1; }
+tbody tr:last-child td { border-bottom: none; }
+td.best { background: var(--best); font-weight: 600; }
+th.grp { text-align: center; border-left: 2px solid var(--line); }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--accent); }
+th.sortable::after { content: "↕"; opacity: .25; margin-left: .35em;
+  font-size: .85em; }
+th.sortable[aria-sort="ascending"]::after { content: "↑"; opacity: 1; }
+th.sortable[aria-sort="descending"]::after { content: "↓"; opacity: 1; }
+th.sortable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+pre { background: var(--head); border: 1px solid var(--line); border-radius: 6px;
+  padding: .8rem 1rem; overflow-x: auto; font-size: .86rem; line-height: 1.5;
+  margin: 0; }
+pre code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+ul.missing { margin: .5rem 0 0; padding-left: 1.2rem; }
+ul.missing li { margin-bottom: .3rem; }
+th.sep, td.sep { border-left: 2px solid var(--line); }
+tbody td:not(:first-child) { font-variant-numeric: tabular-nums; }
+tbody tr:nth-child(even) td { background: var(--stripe); }
+tbody tr:hover td { background: var(--head); }
+tbody tr:hover td.best { background: var(--best); }
+tbody tr:hover td.best { background: var(--best); }
+figure { margin: 0; }
+figure img { max-width: 100%; height: auto; background: #fff; border-radius: 6px;
+  padding: .5rem; }
+.note { color: var(--muted); font-size: .88rem; margin-top: .6rem; }
+details { margin-top: .6rem; }
+summary { cursor: pointer; color: var(--accent); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+</style></head><body><main><h1>UEA leaderboard</h1><p class="sub">26 estimators on 23 datasets &middot; 7 metrics &middot; ordered by average accuracy rank &middot; built 2026-09-03</p><div class="scroll"><table id="leaderboard"><thead><tr><th rowspan="2" class="pos">#</th><th rowspan="2" class="sortable" data-col="1" data-first="asc" data-type="text">Estimator</th><th colspan="2" class="grp">Accuracy</th><th colspan="2" class="grp">Balanced accuracy</th><th colspan="2" class="grp">AUROC</th><th colspan="2" class="grp">F1</th><th colspan="2" class="grp">Log loss &darr;</th><th colspan="2" class="grp">Sensitivity</th><th colspan="2" class="grp">Specificity</th></tr><tr><th class="sep sortable" data-col="2" data-first="desc">Score</th><th class="sortable" data-col="3" data-first="asc">Rank</th><th class="sep sortable" data-col="4" data-first="desc">Score</th><th class="sortable" data-col="5" data-first="asc">Rank</th><th class="sep sortable" data-col="6" data-first="desc">Score</th><th class="sortable" data-col="7" data-first="asc">Rank</th><th class="sep sortable" data-col="8" data-first="desc">Score</th><th class="sortable" data-col="9" data-first="asc">Rank</th><th class="sep sortable" data-col="10" data-first="asc">Score</th><th class="sortable" data-col="11" data-first="asc">Rank</th><th class="sep sortable" data-col="12" data-first="desc">Score</th><th class="sortable" data-col="13" data-first="asc">Rank</th><th class="sep sortable" data-col="14" data-first="desc">Score</th><th class="sortable" data-col="15" data-first="asc">Rank</th></tr></thead><tbody><tr><td class="pos">1</td><td>HC2</td><td class="sep best">0.7665</td><td class="best">7.13</td><td class="sep best">0.7452</td><td class="best">8.09</td><td class="sep">0.8823</td><td class="best">7.13</td><td class="sep">0.7411</td><td class="best">8.11</td><td class="sep best">0.6692</td><td class="best">6.39</td><td class="sep">0.7470</td><td>8.54</td><td class="sep best">0.7703</td><td class="best">7.04</td></tr><tr><td class="pos">2</td><td>RDST</td><td class="sep">0.7459</td><td>8.50</td><td class="sep">0.7294</td><td>8.80</td><td class="sep">0.8179</td><td>18.74</td><td class="sep">0.7243</td><td>8.80</td><td class="sep">9.1587</td><td>20.91</td><td class="sep">0.7263</td><td>9.30</td><td class="sep">0.7560</td><td>8.57</td></tr><tr><td class="pos">3</td><td>MRHydra</td><td class="sep">0.7523</td><td>8.87</td><td class="sep">0.7388</td><td>8.78</td><td class="sep">0.8236</td><td>18.63</td><td class="sep best">0.7432</td><td>8.17</td><td class="sep">8.9285</td><td>20.96</td><td class="sep">0.7599</td><td class="best">8.22</td><td class="sep">0.7360</td><td>9.02</td></tr><tr><td class="pos">4</td><td>Arsenal</td><td class="sep">0.7321</td><td>9.98</td><td class="sep">0.7134</td><td>10.59</td><td class="sep">0.8439</td><td>15.13</td><td class="sep">0.7116</td><td>10.20</td><td class="sep">5.5624</td><td>18.09</td><td class="sep">0.7119</td><td>10.76</td><td class="sep">0.7417</td><td>9.35</td></tr><tr><td class="pos">5</td><td>ROCKET</td><td class="sep">0.7317</td><td>9.98</td><td class="sep">0.7146</td><td>10.41</td><td class="sep">0.8089</td><td>19.91</td><td class="sep">0.7130</td><td>10.70</td><td class="sep">9.6705</td><td>22.07</td><td class="sep">0.7133</td><td>11.35</td><td class="sep">0.7393</td><td>9.80</td></tr><tr><td class="pos">6</td><td>RIST</td><td class="sep">0.7433</td><td>10.20</td><td class="sep">0.7278</td><td>10.46</td><td class="sep">0.8755</td><td>8.67</td><td class="sep">0.7325</td><td>10.52</td><td class="sep">0.7983</td><td>10.09</td><td class="sep">0.7454</td><td>10.70</td><td class="sep">0.7322</td><td>11.24</td></tr><tr><td class="pos">7</td><td>H-InceptionTime</td><td class="sep">0.7223</td><td>10.28</td><td class="sep">0.7230</td><td>9.74</td><td class="sep">0.8653</td><td>8.76</td><td class="sep">0.6967</td><td>10.37</td><td class="sep">1.5030</td><td>11.48</td><td class="sep">0.7053</td><td>10.13</td><td class="sep">0.7345</td><td>10.78</td></tr><tr><td class="pos">8</td><td>CIF</td><td class="sep">0.7525</td><td>10.87</td><td class="sep">0.7378</td><td>11.07</td><td class="sep">0.8825</td><td>8.96</td><td class="sep">0.7400</td><td>10.72</td><td class="sep">0.8488</td><td>11.26</td><td class="sep best">0.7604</td><td>11.04</td><td class="sep">0.7349</td><td>11.30</td></tr><tr><td class="pos">9</td><td>FreshPRINCE</td><td class="sep">0.7422</td><td>11.24</td><td class="sep">0.7281</td><td>11.48</td><td class="sep">0.8796</td><td>8.37</td><td class="sep">0.7239</td><td>12.13</td><td class="sep">0.7764</td><td>7.87</td><td class="sep">0.7313</td><td>12.11</td><td class="sep">0.7457</td><td>12.20</td></tr><tr><td class="pos">10</td><td>DrCIF</td><td class="sep">0.7386</td><td>11.39</td><td class="sep">0.7252</td><td>11.39</td><td class="sep">0.8734</td><td>9.91</td><td class="sep">0.7246</td><td>12.24</td><td class="sep">0.8458</td><td>11.52</td><td class="sep">0.7384</td><td>12.04</td><td class="sep">0.7303</td><td>12.48</td></tr><tr><td class="pos">11</td><td>LITETime-MV</td><td class="sep">0.7073</td><td>11.54</td><td class="sep">0.7064</td><td>10.67</td><td class="sep">0.8568</td><td>8.96</td><td class="sep">0.6779</td><td>10.41</td><td class="sep">1.4779</td><td>10.39</td><td class="sep">0.6905</td><td>10.17</td><td class="sep">0.7218</td><td>11.00</td></tr><tr><td class="pos">12</td><td>LiteTIME</td><td class="sep">0.7087</td><td>12.00</td><td class="sep">0.7019</td><td>11.13</td><td class="sep">0.8576</td><td>9.93</td><td class="sep">0.6751</td><td>11.57</td><td class="sep">1.6854</td><td>10.52</td><td class="sep">0.6985</td><td>10.48</td><td class="sep">0.7204</td><td>11.57</td></tr><tr><td class="pos">13</td><td>QUANT</td><td class="sep">0.7285</td><td>13.26</td><td class="sep">0.7171</td><td>12.98</td><td class="sep best">0.8888</td><td>8.37</td><td class="sep">0.7195</td><td>13.07</td><td class="sep">0.8041</td><td>9.13</td><td class="sep">0.7421</td><td>12.54</td><td class="sep">0.7074</td><td>14.04</td></tr><tr><td class="pos">14</td><td>STSF</td><td class="sep">0.7345</td><td>13.61</td><td class="sep">0.7223</td><td>13.57</td><td class="sep">0.8774</td><td>11.72</td><td class="sep">0.6934</td><td>14.04</td><td class="sep">0.8338</td><td>10.13</td><td class="sep">0.7007</td><td>14.33</td><td class="sep">0.7600</td><td>13.20</td></tr><tr><td class="pos">15</td><td>TS2Vec</td><td class="sep">0.7070</td><td>14.11</td><td class="sep">0.6913</td><td>14.54</td><td class="sep">0.8470</td><td>13.85</td><td class="sep">0.6917</td><td>14.00</td><td class="sep">0.8902</td><td>12.00</td><td class="sep">0.7150</td><td>14.04</td><td class="sep">0.6877</td><td>14.41</td></tr><tr><td class="pos">16</td><td>TDE</td><td class="sep">0.7079</td><td>14.65</td><td class="sep">0.6862</td><td>14.78</td><td class="sep">0.8484</td><td>13.20</td><td class="sep">0.6775</td><td>14.57</td><td class="sep">1.1475</td><td>12.83</td><td class="sep">0.6897</td><td>14.80</td><td class="sep">0.7095</td><td>14.07</td></tr><tr><td class="pos">17</td><td>PatchMTSC</td><td class="sep">0.7110</td><td>14.72</td><td class="sep">0.6986</td><td>14.37</td><td class="sep">0.8601</td><td>11.33</td><td class="sep">0.6899</td><td>14.13</td><td class="sep">0.7670</td><td>8.00</td><td class="sep">0.7192</td><td>13.89</td><td class="sep">0.6928</td><td>14.87</td></tr><tr><td class="pos">18</td><td>ConvTran</td><td class="sep">0.6931</td><td>15.46</td><td class="sep">0.6801</td><td>15.11</td><td class="sep">0.8552</td><td>12.33</td><td class="sep">0.6793</td><td>14.50</td><td class="sep">0.8155</td><td>10.22</td><td class="sep">0.7049</td><td>14.80</td><td class="sep">0.6736</td><td>16.22</td></tr><tr><td class="pos">19</td><td>TSF</td><td class="sep">0.7214</td><td>15.54</td><td class="sep">0.7076</td><td>15.30</td><td class="sep">0.8671</td><td>12.22</td><td class="sep">0.6917</td><td>15.04</td><td class="sep">0.9127</td><td>11.52</td><td class="sep">0.6977</td><td>15.48</td><td class="sep">0.7365</td><td>14.91</td></tr><tr><td class="pos">20</td><td>STC</td><td class="sep">0.7265</td><td>15.57</td><td class="sep">0.7036</td><td>16.11</td><td class="sep">0.8803</td><td>11.78</td><td class="sep">0.7035</td><td>15.67</td><td class="sep">0.8124</td><td>11.00</td><td class="sep">0.7186</td><td>16.09</td><td class="sep">0.7184</td><td>15.11</td></tr><tr><td class="pos">21</td><td>Catch22</td><td class="sep">0.7006</td><td>15.65</td><td class="sep">0.6854</td><td>16.20</td><td class="sep">0.8557</td><td>13.02</td><td class="sep">0.6897</td><td>15.67</td><td class="sep">0.9814</td><td>14.00</td><td class="sep">0.7096</td><td>15.26</td><td class="sep">0.6802</td><td>16.11</td></tr><tr><td class="pos">22</td><td>1NN-DTW</td><td class="sep">0.6848</td><td>16.87</td><td class="sep">0.6759</td><td>16.30</td><td class="sep">0.7785</td><td>22.28</td><td class="sep">0.6702</td><td>16.48</td><td class="sep">11.3600</td><td>23.85</td><td class="sep">0.6720</td><td>16.46</td><td class="sep">0.6879</td><td>16.43</td></tr><tr><td class="pos">23</td><td>TimesURL</td><td class="sep">0.6809</td><td>17.50</td><td class="sep">0.6658</td><td>17.48</td><td class="sep">0.8290</td><td>18.52</td><td class="sep">0.6539</td><td>17.48</td><td class="sep">1.3557</td><td>17.91</td><td class="sep">0.6698</td><td>18.09</td><td class="sep">0.6738</td><td>16.93</td></tr><tr><td class="pos">24</td><td>Summary</td><td class="sep">0.6477</td><td>18.78</td><td class="sep">0.6355</td><td>18.72</td><td class="sep">0.8295</td><td>17.70</td><td class="sep">0.6206</td><td>18.57</td><td class="sep">1.3000</td><td>16.61</td><td class="sep">0.6291</td><td>18.39</td><td class="sep">0.6589</td><td>18.33</td></tr><tr><td class="pos">25</td><td>TimesNet</td><td class="sep">0.6584</td><td>19.35</td><td class="sep">0.6504</td><td>18.70</td><td class="sep">0.8332</td><td>17.02</td><td class="sep">0.6386</td><td>19.26</td><td class="sep">1.1641</td><td>13.74</td><td class="sep">0.6628</td><td>18.46</td><td class="sep">0.6504</td><td>19.67</td></tr><tr><td class="pos">26</td><td>Dummy</td><td class="sep">0.2168</td><td>23.96</td><td class="sep">0.1980</td><td>24.24</td><td class="sep">0.5000</td><td>24.57</td><td class="sep">0.0800</td><td>24.59</td><td class="sep">1.9123</td><td>18.52</td><td class="sep">0.1853</td><td>23.52</td><td class="sep">0.2288</td><td>22.35</td></tr></tbody></table></div><p class="note">Average score and average rank over the 23 datasets with results for every estimator on every metric. Best in each column is highlighted. Metrics marked &darr; are better when lower.</p><h2>Missing results</h2><ul class="missing"><li><b>MRHydra</b> &mdash; PenDigits (ValueError: n_timepoints must be &gt;= 9, but found 8)</li><li><b>FreshPRINCE</b> &mdash; FaceDetection (OOM at 128GB)</li><li><b>STSF</b> &mdash; PenDigits (not recorded)</li><li><b>ConvTran</b> &mdash; EigenWorms (CUDA out of memory)</li></ul><p class="note">Scoring uses the 23 datasets every estimator completed, so a dataset any one of them is missing is left out for all. Reasons are from the job logs of these runs.</p><p class="note">4 requested dataset(s) have no results from any estimator: <code>BasicMotions, FingerMovements, InsectWingbeat, SelfRegulationSCP2</code>.</p><h2>Reproducing this page</h2><pre><code>from multiverse.experiments.tables import leaderboard
+
+leaderboard(
+    datasets=sorted(UEA),
+    estimators=[&quot;HC2&quot;, &quot;RDST&quot;, &quot;MRHydra&quot;, &quot;Arsenal&quot;, &quot;ROCKET&quot;, &quot;RIST&quot;, &quot;H-InceptionTime&quot;, &quot;CIF&quot;, &quot;FreshPRINCE&quot;, &quot;DrCIF&quot;, &quot;LITETime-MV&quot;, &quot;LiteTIME&quot;, &quot;QUANT&quot;, &quot;STSF&quot;, &quot;TS2Vec&quot;, &quot;TDE&quot;, &quot;PatchMTSC&quot;, &quot;ConvTran&quot;, &quot;TSF&quot;, &quot;STC&quot;, &quot;Catch22&quot;, &quot;1NN-DTW&quot;, &quot;TimesURL&quot;, &quot;Summary&quot;, &quot;TimesNet&quot;, &quot;Dummy&quot;],
+    metrics=[&quot;accuracy&quot;, &quot;balacc&quot;, &quot;auroc&quot;, &quot;f1&quot;, &quot;logloss&quot;, &quot;sensitivity&quot;, &quot;specificity&quot;],
+    sort_by=&quot;accuracy&quot;,
+)</code></pre><p class="note">Or <code>python -m multiverse.experiments.tables</code> to rebuild it with the defaults.</p></main><script>
+(function () {
+  var table = document.getElementById("leaderboard");
+  if (!table) return;
+  var body = table.tBodies[0];
+  var headers = table.querySelectorAll("th.sortable");
+
+  function value(row, index, text) {
+    var cell = row.cells[index];
+    if (!cell) return text ? "" : 0;
+    var raw = cell.textContent.trim();
+    if (text) return raw.toLowerCase();
+    var number = parseFloat(raw.replace(/,/g, ""));
+    return isNaN(number) ? 0 : number;
+  }
+
+  function sort(header) {
+    var index = parseInt(header.dataset.col, 10);
+    var isText = header.dataset.type === "text";
+    // repeat clicks toggle; a new column starts in its "best first" direction
+    var current = header.getAttribute("aria-sort");
+    var direction;
+    if (current === "ascending") direction = "descending";
+    else if (current === "descending") direction = "ascending";
+    else direction = header.dataset.first === "asc" ? "ascending" : "descending";
+
+    var sign = direction === "ascending" ? 1 : -1;
+    var rows = Array.prototype.slice.call(body.rows);
+    rows.sort(function (a, b) {
+      var x = value(a, index, isText);
+      var y = value(b, index, isText);
+      if (x < y) return -sign;
+      if (x > y) return sign;
+      return 0;
+    });
+    rows.forEach(function (row, i) {
+      body.appendChild(row);
+      // the position column always numbers the order actually on screen
+      if (row.cells[0]) row.cells[0].textContent = i + 1;
+    });
+
+    headers.forEach(function (other) { other.removeAttribute("aria-sort"); });
+    header.setAttribute("aria-sort", direction);
+  }
+
+  headers.forEach(function (header) {
+    header.tabIndex = 0;
+    header.addEventListener("click", function () { sort(header); });
+    header.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        sort(header);
+      }
+    });
+  });
+})();
+</script></body></html>
