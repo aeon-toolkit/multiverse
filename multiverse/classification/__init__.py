@@ -7,6 +7,7 @@ __all__ = [
     "ConvTranClassifier",
     "DisjointCNNClassifier",
     "PatchMTSCClassifier",
+    "RankSCLClassifier",
     "TimesNetClassifier",
     "TS2VecClassifier",
     "XCMClassifier",
@@ -16,6 +17,7 @@ __all__ = [
 from multiverse.classification._convtran import ConvTranClassifier
 from multiverse.classification._disjoint_cnn import DisjointCNNClassifier
 from multiverse.classification._patchmtsc import PatchMTSCClassifier
+from multiverse.classification._rankscl import RankSCLClassifier
 from multiverse.classification._timesnet import TimesNetClassifier
 from multiverse.classification._ts2vec import TS2VecClassifier
 from multiverse.classification._xcm import XCMClassifier
