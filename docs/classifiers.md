@@ -114,14 +114,47 @@ Mathematics, 9(23), 2021.
 This is the only Keras port here, following the authors, so it needs `tensorflow`
 rather than `torch`. Both are in the `deep-learning` extra.
 
-The authors tune `window_size` per dataset. Their results table carries a `Win_pct`
-column spread over a five point grid: 20, 40 and 60 on five datasets each, 80 on
-thirteen, and 100 on two. The default here is **0.8**, the value they use most often.
-The 0.2 in their `config.yml` is the worked example for BasicMotions, not a default.
+### Reproducing the authors' tuning
+
+The authors do not use a fixed window. Section 4.3 sets `window_size` and `batch_size`
+per dataset "by grid search based on the best average accuracy following a stratified
+5-fold cross-validation on the training set", over windows {0.2, 0.4, 0.6, 0.8, 1.0}
+and batches {1, 8, 32}. Selection never touches the test data, so the published figures
+are tuned but not leaked.
+
+Both parameters accept a sequence, which triggers that search; a scalar fits once, as
+before. So the default remains a single fit at **0.8**, the value their results table
+uses most often, thirteen of thirty, and the paper's protocol is one argument away:
+
+```python
+from multiverse.classification import XCMClassifier
+from multiverse.classification._xcm import PAPER_WINDOW_SIZES, PAPER_BATCH_SIZES
+
+XCMClassifier(window_size=PAPER_WINDOW_SIZES)                          # window only
+XCMClassifier(window_size=PAPER_WINDOW_SIZES, batch_size=PAPER_BATCH_SIZES)  # full grid
+```
+
+The selected values are on `window_fraction_` and `batch_size_`, and every grid point's
+mean and per-fold accuracy on `cv_results_`.
+
+Cost is the reason the default is a single fit. Our fixed-window pass over
+Multiverse-core took 1.2 GPU-hours in total. Searching the window alone is five
+candidates over five folds, about 20 times that, so roughly a day of GPU time. Adding
+the batch grid multiplies it again by about 37, because batch 1 takes 32 times the
+gradient steps of batch 32, which puts the full grid near 900 GPU-hours. Since the
+published table selects batch 32 on 26 of 30 datasets, tuning the window alone recovers
+most of the difference for a fortieth of the compute. `XCM-Tuned` in `tsml-eval` is that
+configuration.
+
+Fixed at 0.8 we average 0.699 across the 23 datasets shared with the paper's table,
+against their 0.761. A 6.2 point gap is the expected size: they report a mean relative
+accuracy drop of 7.0% +/- 1.3% from using a suboptimal window.
 
 Because `window_size` is a fraction, the kernel grows with the series, and 0.8 of
-EigenWorms' 17984 points would be a 14387 point kernel. `max_window` bounds the kernel
-at 100 points, and it is floored at 1 for very short series.
+EigenWorms' 17984 points is a 14387 point kernel. `max_window` bounds it at 100 points
+and floors it at 1 for very short series. That bound is ours, not the authors': they run
+kernels of this order, 40% of EigenWorms being 7193 points. Set `max_window=None` to
+reproduce them, and expect the memory cost to follow.
 
 ## Notes on the ports
 
