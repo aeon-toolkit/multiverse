@@ -5,6 +5,7 @@ Each classifier is imported or ported in and wrapped in the aeon interface.
 
 __all__ = [
     "ConvTranClassifier",
+    "DisjointCNNClassifier",
     "PatchMTSCClassifier",
     "TimesNetClassifier",
     "TS2VecClassifier",
@@ -13,6 +14,7 @@ __all__ = [
 ]
 
 from multiverse.classification._convtran import ConvTranClassifier
+from multiverse.classification._disjoint_cnn import DisjointCNNClassifier
 from multiverse.classification._patchmtsc import PatchMTSCClassifier
 from multiverse.classification._timesnet import TimesNetClassifier
 from multiverse.classification._ts2vec import TS2VecClassifier

@@ -14,6 +14,7 @@ from aeon.testing.data_generation import make_example_3d_numpy
 
 from multiverse.classification import (
     ConvTranClassifier,
+    DisjointCNNClassifier,
     PatchMTSCClassifier,
     TimesNetClassifier,
     TimesURLClassifier,
@@ -65,6 +66,14 @@ SMALL_PARAMS = {
         "batch_size": 4,
         "probe": "logistic",
         "device": "cpu",
+        "random_state": 0,
+    },
+    DisjointCNNClassifier: {
+        "n_layers": 2,
+        "n_filters": 4,
+        "n_epochs": 2,
+        "batch_size": 4,
+        "validation_size": 0.0,
         "random_state": 0,
     },
     XCMClassifier: {

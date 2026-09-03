@@ -12,6 +12,9 @@ from multiverse.experiments.tables import (
     LOWER_IS_BETTER,
     METRIC_LABELS,
     available_estimators,
+    dataset_markdown,
+    dataset_page,
+    dataset_summary,
     leaderboard,
     leaderboard_markdown,
     load_metric,
@@ -222,3 +225,71 @@ def test_write_markdown_table_without_markers(tmp_path):
     path.write_text("no markers here\n", encoding="utf-8")
     assert not write_markdown_table(path, "new", marker="T")
     assert path.read_text(encoding="utf-8") == "no markers here\n"
+
+
+def test_dataset_summary_excludes_the_baseline(results_dir):
+    """Best, median and spread ignore the baseline; gain is measured against it."""
+    summary = dataset_summary(
+        ["d1", "d2", "d3"], ["Alice", "Bob", "Carol"], baseline="Carol",
+        results_dir=results_dir,
+    )
+    # d1: Alice 0.9, Bob 0.6, baseline Carol 0.3
+    assert summary.at["d1", "best"] == pytest.approx(0.9)
+    assert summary.at["d1", "best_estimator"] == "Alice"
+    assert summary.at["d1", "worst"] == pytest.approx(0.6)
+    assert summary.at["d1", "baseline"] == pytest.approx(0.3)
+    assert summary.at["d1", "gain"] == pytest.approx(0.6)
+    assert summary.at["d1", "spread"] == pytest.approx(0.3)
+    assert summary.at["d1", "estimators"] == 2
+
+
+def test_dataset_summary_keeps_partly_covered_datasets(results_dir):
+    """A dataset only some estimators finished is kept, with a lower count.
+
+    This is where it differs from the leaderboard, which has to drop d3 to keep
+    the averages comparable.
+    """
+    summary = dataset_summary(
+        ["d1", "d2", "d3"], ["Alice", "Bob", "Carol"], results_dir=results_dir
+    )
+    assert list(summary.index) == ["d1", "d2", "d3"]
+    # Carol has no d3, and is not the baseline here, so only two contribute
+    assert summary.at["d3", "estimators"] == 2
+    assert summary.at["d1", "estimators"] == 3
+
+
+def test_dataset_summary_lower_is_better_flips_best_and_gain(results_dir):
+    """For log loss the best score is the smallest, and gain stays positive."""
+    summary = dataset_summary(
+        ["d1"], ["Alice", "Bob", "Carol"], metric="logloss", baseline="Carol",
+        results_dir=results_dir,
+    )
+    # stored as 1 - score, so Alice 0.1, Bob 0.4, Carol 0.7
+    assert summary.at["d1", "best"] == pytest.approx(0.1)
+    assert summary.at["d1", "best_estimator"] == "Alice"
+    assert summary.at["d1", "gain"] == pytest.approx(0.6)
+    assert summary.at["d1", "spread"] == pytest.approx(0.3)
+
+
+def test_dataset_page_is_written_and_sorted_by_gain(results_dir, tmp_path):
+    """The page lists every dataset, worst gain first."""
+    path = dataset_page(
+        ["d1", "d2", "d3"], ["Alice", "Bob", "Carol"], baseline="Carol",
+        results_dir=results_dir, output_path=tmp_path / "datasets.html",
+    )
+    html = path.read_text(encoding="utf-8")
+    for dataset in ["d1", "d2", "d3"]:
+        assert f"<td>{dataset}</td>" in html
+    # d3 has no baseline score, so its gain is NaN and it sorts last
+    assert html.index("<td>d2</td>") < html.index("<td>d3</td>")
+    assert "Gain over dummy" in html
+
+
+def test_dataset_markdown_marks_the_best(results_dir):
+    """The Markdown table bolds the best score and names the estimator."""
+    table = dataset_markdown(
+        ["d1"], ["Alice", "Bob", "Carol"], baseline="Carol", results_dir=results_dir
+    )
+    assert "| d1 |" in table
+    assert "**0.9000**" in table
+    assert "Alice" in table

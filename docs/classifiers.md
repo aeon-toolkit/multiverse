@@ -114,14 +114,50 @@ Mathematics, 9(23), 2021.
 This is the only Keras port here, following the authors, so it needs `tensorflow`
 rather than `torch`. Both are in the `deep-learning` extra.
 
-The authors tune `window_size` per dataset. Their results table carries a `Win_pct`
-column spread over a five point grid: 20, 40 and 60 on five datasets each, 80 on
-thirteen, and 100 on two. The default here is **0.8**, the value they use most often.
-The 0.2 in their `config.yml` is the worked example for BasicMotions, not a default.
+### Tuning, and what we report
+
+**The XCM results in this repository follow the authors' protocol.** Section 4.3 sets
+`window_size` and `batch_size` per dataset "by grid search based on the best average
+accuracy following a stratified 5-fold cross-validation on the training set", over
+windows {0.2, 0.4, 0.6, 0.8, 1.0} and batches {1, 8, 32}. Selection never touches the
+test data, so the published figures are tuned but not leaked, and neither are ours.
+
+The reported run searches the window on that grid and holds batch size at 32. That is
+the one departure, and it is a cost decision rather than a modelling one: batch 1 takes
+roughly 32 times the gradient steps, which would turn a day of GPU time into about 900
+hours, for a value the published table selects on 4 of 30 datasets.
+
+Both parameters accept a sequence, which triggers the search; a scalar fits once. The
+class default is a single fit at **0.8**, the modal published window, because a default
+should be cheap, but `XCM` in `tsml-eval` supplies the grid, and `XCM-Fixed` is the
+single-fit variant kept for comparison:
+
+```python
+from multiverse.classification import XCMClassifier
+from multiverse.classification._xcm import PAPER_WINDOW_SIZES, PAPER_BATCH_SIZES
+
+XCMClassifier(window_size=PAPER_WINDOW_SIZES)                          # window only
+XCMClassifier(window_size=PAPER_WINDOW_SIZES, batch_size=PAPER_BATCH_SIZES)  # full grid
+```
+
+The selected values are on `window_fraction_` and `batch_size_`, and every grid point's
+mean and per-fold accuracy on `cv_results_`.
+
+Cost is the reason the class default is a single fit. A fixed-window pass over
+Multiverse-core took 1.2 GPU-hours in total; searching the window is five candidates
+over five folds, about 20 times that.
+
+That earlier fixed-window pass is what motivated the change. It averaged 0.699 across
+the 23 datasets shared with the paper's table against their 0.761, and the paper itself
+reports a mean relative accuracy drop of 7.0% +/- 1.3% from using a suboptimal window,
+which is the size of the gap observed. Reporting a fixed window would have measured a
+configuration the authors never used.
 
 Because `window_size` is a fraction, the kernel grows with the series, and 0.8 of
-EigenWorms' 17984 points would be a 14387 point kernel. `max_window` bounds the kernel
-at 100 points, and it is floored at 1 for very short series.
+EigenWorms' 17984 points is a 14387 point kernel. `max_window` bounds it at 100 points
+and floors it at 1 for very short series. That bound is ours, not the authors': they run
+kernels of this order, 40% of EigenWorms being 7193 points. Set `max_window=None` to
+reproduce them, and expect the memory cost to follow.
 
 ## Notes on the ports
 
