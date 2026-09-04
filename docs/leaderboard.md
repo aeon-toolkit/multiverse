@@ -1,8 +1,8 @@
 # Leaderboards
 
-The leaderboards can be interactively generated on the WEBSITE. These are some 
+The leaderboards can be interactively generated on the WEBSITE COMING SOON. These are some 
 illustrative static leaderboards ranked on classification accuracy. We will embed 
-the interactive version and update this dynamic in time. 
+the interactive version when its ready. In the interim, we present some generative tools. 
 
 ## Generating a leaderboard
 
@@ -29,9 +29,7 @@ are used, so each column describes the same problems; anything left out is liste
 the page with the reason taken from `results/multiverse/missing_results.csv`.
 
 A critical difference diagram can be added with `critical_difference=True`. It is off
-by default because on the current results the omnibus Friedman test does not reject
-over the leading estimators, so the diagram is a single clique and shows nothing the
-table does not.
+by default because we generate the front page table for all estimators.
 
 Building the same page from the command line:
 
@@ -57,41 +55,3 @@ Every column in the generated table is sortable: click a heading to sort by it, 
 click again to reverse. The first click puts the best value on top, so ascending for
 ranks and for log loss, descending for the rest.
 
-**A warning on `max_cd_estimators`.** Truncating the critical difference diagram to the
-best `n` estimators changes the statistics rather than just hiding rows. Ranks, the
-omnibus test and the corrected alpha are all computed over the subset shown. The
-diagram starts with an omnibus Friedman test, and dropping the weakest estimators
-compresses the spread of average ranks, which can take that test from rejecting to not
-rejecting. When Friedman does not reject, aeon places every estimator in a single clique
-and runs no pairwise tests at all, so no differences appear.
-
-On the current Multiverse-core results this is not hypothetical:
-
-| Estimators in the diagram | Friedman p | Outcome |
-|---|---|---|
-| top 6 | 0.44 | one clique, no pairwise tests |
-| top 8 | 0.14 | one clique, no pairwise tests |
-| all 10 | 0.0003 | 7 significant pairs at alpha/(k-1) = 0.011 |
-
-Treat a truncated diagram as a statement about that subset only.
-
-`available_estimators()` lists the estimators that have results, and `load_metric()`
-returns one estimator's scores for one metric as a `pandas.Series` if you would rather
-build your own table.
-
-## Multiverse
-
-## Multiverse-core
-
-
-## EEG archive
-
-The EEG archive is a collection of EEG classification problems, described in [1]. On 
-release, it contains 30 datasets. Two of these are univariate and two are not 
-available on zenodo. The resulting list is contained in the multiverse
-
-
-## UEA archive
-
-People will still use the UEA archive, so it is worth maintaining a list for sanity 
-checks. The archive contains 30 datasets, but 
