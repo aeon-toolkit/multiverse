@@ -1,56 +1,47 @@
-# Classifier Results
+# Classifier results
 
-Results used in past bake offs are available on [tsc.com]
-(https://timeseriesclassification.com) and 
-obtainable in code with [aeon](https://github.com/aeon-toolkit/aeon/blob/main/aeon/benchmarking/results_loaders.py).
+This page describes the prediction and summary results stored in this repository. For
+the archive collections, dataset splits and dataset selection, see
+[`datasets.md`](datasets.md). For running experiments and converting raw predictions
+into these tables, see [`evaluation.md`](evaluation.md).
 
-```python
+## Published and generated results
 
-from aeon.benchmarking.results_loaders import get_available_estimators
-cls = get_available_estimators("Classification")  # doctest: +SKIP
-from aeon.benchmarking.results_loaders import get_estimator_results
-cls = ["HC2"]  # doctest: +SKIP
-data = ["Chinatown", "Adiac"]  # doctest: +SKIP
-get_estimator_results(estimators=cls, datasets=data) # doctest: +SKIP
-```
-
-We currently store the multiverse results in the results directory. Currently 
-only have accuracy for the default splits for subsets of the multiverse. This is 
-still a work in progress. You will soon be able to explore and download these results 
-interactively on the [multiverse website] (COMING SOON).
-
-The dataset lists are 
+Results from earlier bake-offs are available from
+[timeseriesclassification.com](https://timeseriesclassification.com) and can be
+loaded through aeon's [results loaders](https://github.com/aeon-toolkit/aeon/blob/main/aeon/benchmarking/results_loaders.py):
 
 ```python
+from aeon.benchmarking.results_loaders import (
+    get_available_estimators,
+    get_estimator_results,
+)
 
-from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026, eeg2026
-print(len(multiverse_core)) # 66
-print(len(multiverse2026)) # 133
-print(len(eeg2026))  # 28
-
+estimators = get_available_estimators("Classification")
+results = get_estimator_results(
+    estimators=["HC2"],
+    datasets=["Chinatown", "Adiac"],
+)
 ```
 
-### The Full Multiverse, 2026
+The regenerated multiverse results distributed with this repository are stored under
+[`published_results/`](../published_results/). Raw prediction files and the scripts
+that produce summary tables are described in [`evaluation.md`](evaluation.md).
 
-The full multiverse has 133 datasets in it. We have results for 17 classifiers on 
-some subset of these problems. 
+## Repository summary tables
 
-```python
-from pathlib import Path
-import pandas as pd
+The checked-in benchmark tables are arranged by collection, estimator and metric. For
+example:
 
-# Run this from the repository root
-df = pd.read_csv(Path("results") / "multiverse" / "accuracy_mean.csv")
-print(df.head())
+```text
+results/multiverse/<estimator>/<estimator>_<metric>.csv
 ```
-## The Multiverse-core (M-core)
 
-We specify a subset of 66 datasets for evaluation. These are more balanced in 
-application, remove overly similar, too simple or zero information datasets and 
-have a good distribution in size and length.
+Each table has one row per dataset and one column per resample. The index is labelled
+`Resamples:`. A table named `accuracy_mean.csv` may also be present at the collection
+level for a compact estimator-by-dataset view.
 
-Per-estimator results for Multiverse-core are stored one directory per estimator,
-with one file per performance measure.
+Load a metric for one estimator with the repository helpers:
 
 ```python
 from multiverse.experiments.tables import available_estimators, load_metric
@@ -60,18 +51,30 @@ accuracy = load_metric("RIST", "accuracy")
 print(accuracy.shape)
 ```
 
-See [`docs/leaderboard.md`](leaderboard.md) for building a ranked leaderboard from
-these.
+`load_metric` averages across resample columns when more than one resample is present.
+Datasets without a result for an estimator are left missing rather than assigned a
+placeholder score. The leaderboard uses the common set of completed datasets when
+comparing estimators, so the comparison is made on the same problems.
 
+## Building summaries
 
-## The EEG Classification archive, 2026
+After raw tsml-eval files have been ingested, build the HTML leaderboard with:
 
-The EEG archive is a sub-project meant to benchmark EEG classification algorithms. 
-The project is based around [aeon-neuro](https://github.com/aeon-toolkit/aeon-neuro)
-
-
-```python
-df = pd.read_csv(Path("results") / "eeg" / "accuracy_mean.csv")
-print(df.shape)
+```bash
+python -m multiverse.experiments.tables
 ```
 
+Or generate one explicitly:
+
+```python
+from multiverse.experiments.tables import leaderboard
+
+leaderboard(
+    datasets=["BasicMotions", "ItalyPowerDemand", "Trace"],
+    estimators=["ROCKET", "DrCIF", "ConvTran"],
+    metrics=["accuracy", "balacc", "logloss"],
+    output_path="./results/multiverse/leaderboard.html",
+)
+```
+
+See [`leaderboard.md`](leaderboard.md) for the available views and ranking options.

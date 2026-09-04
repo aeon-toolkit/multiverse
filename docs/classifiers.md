@@ -114,13 +114,11 @@ Mathematics, 9(23), 2021.
 This is the only Keras port here, following the authors, so it needs `tensorflow`
 rather than `torch`. Both are in the `deep-learning` extra.
 
-### Tuning, and what we report
-
-**The XCM results in this repository follow the authors' protocol.** Section 4.3 sets
+The XCM results in this repository follow the authors' tuning protocol. Section 4.3 sets
 `window_size` and `batch_size` per dataset "by grid search based on the best average
 accuracy following a stratified 5-fold cross-validation on the training set", over
 windows {0.2, 0.4, 0.6, 0.8, 1.0} and batches {1, 8, 32}. Selection never touches the
-test data, so the published figures are tuned but not leaked, and neither are ours.
+test data.
 
 The reported run searches the window on that grid and holds batch size at 32. That is
 the one departure, and it is a cost decision rather than a modelling one: batch 1 takes
@@ -161,12 +159,29 @@ reproduce them, and expect the memory cost to follow.
 
 ## Notes on the ports
 
-All three wrappers take aeon's ``numpy3D`` collections, shape
+All classifiers in this package take aeon's ``numpy3D`` collections, shape
 ``(n_cases, n_channels, n_timepoints)``, and transpose internally where the original
-network expects a different layout. Each holds out ``validation_size`` of the training
-data inside ``fit`` and restores the best epoch, so no external validation split is
-required. The networks require ``torch``, which is not a hard dependency of this
-package: install it with ``pip install aeon-multiverse[deep-learning]``.
+network expects a different layout. Validation and epoch selection differ by port:
+
+* ConvTran and PatchMTSC split off ``validation_size`` inside ``fit`` and restore the
+  epoch with the lowest validation loss. With ``validation_size=0`` they select on
+  training loss instead.
+* TimesNet splits internally and restores the epoch with the best validation accuracy
+  when a nonzero split is feasible. With ``validation_size=0`` (or fewer than two
+  cases) it selects on training loss instead.
+* DisjointCNN passes a sampled ``validation_size`` set to Keras, but samples with
+  replacement from the training collection and leaves those cases in training. It
+  restores the best monitored weights, but this is not a held-out validation split.
+* XCM has no validation split or best-epoch restoration: it trains for a fixed number
+  of epochs. Its optional cross-validation selects hyperparameters, not an epoch.
+* TimesURL and TS2Vec pretrain on the full training collection and fit their probe on
+  the resulting training representations; neither has an internal validation split or
+  best-epoch restoration.
+
+Thus no external validation split is required by these wrappers, but the same
+validation procedure does not apply to every classifier. The networks require
+``torch``, which is not a hard dependency of this package: install it with
+``pip install aeon-multiverse[deep-learning]``.
 
 ### What was ported, and from where
 
@@ -216,7 +231,7 @@ faithful transcription.
 | ``probability=True`` on the SVM probe | TS2Vec | The authors' grid sets it False, which leaves an ``SVC`` unable to produce probability estimates. aeon classifiers must implement ``predict_proba``, so it is enabled, adding Platt scaling fitted by internal cross-validation on the training data |
 | Layer imports taken from ``tensorflow.keras.layers`` | XCM | The original imports ``Conv1D`` and ``Conv2D`` from ``keras.layers.convolutional``, a path removed in Keras 3. The layers and their arguments are unchanged |
 | Kernel length floored at one point | XCM | The original computes ``int(window_size * n)``, which is zero for series shorter than five points and builds an invalid layer |
-| Validation split moved inside ``fit`` | all three | The originals split train/validation outside the model, which risks leakage between train and test. TSLib is explicit about it: ``exp_classification.py`` sets ``vali_data = self._get_data(flag='TEST')``, so it selects the retained epoch on the test set. See the note at the top of this page |
+| Validation split moved inside ``fit`` | ConvTran, PatchMTSC, TimesNet | The originals split train/validation outside the model, which risks leakage between train and test. TSLib is explicit about it: ``exp_classification.py`` sets ``vali_data = self._get_data(flag='TEST')``, so it selects the retained epoch on the test set. See the note at the top of this page |
 | Test data scaled with training statistics | TimesNet | TSLib fits its normaliser separately per split, so its test set is scaled by its own statistics. The port fits on train and applies to test |
 
 Note that PatchMTSC's two graph blocks are, in the original, distinguished only by a
