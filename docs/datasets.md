@@ -57,7 +57,7 @@ Unequal length datasets are stored in a list of 2D numpy arrays. You can control
 whether to load the equal length version with the parameter ``load_equal_length``.
 
 ```python
-X,y = load_classification("JapaneseVowels", load_equal_length = False) # Unequal length example
+X,y = load_classification("JapaneseVowels", load_equal_length = True) # Unequal loaded by default from 1.5
 ```
 Imputed missing value versions can be loaded with the argument ``load_no_missing``. 
 You can download whole archives from zenodo or in code 
@@ -69,9 +69,34 @@ download_archive(archive="UEA", extract_path="C:\\Temp\\")
 
 ```
 Currently should be one of "EEG","UCR","UEA","Imbalanced","TSR", "Unequal". See 
-``aeon`` documentation for more details.  There are lists of datasets in aeon and a 
+``aeon`` documentation for more details. There are lists of datasets in aeon and a
 dictionary of all zenodo keys.
 
 ```python
 from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026, eeg2026, tsc_zenodo
 ```
+
+## Dataset collections used here
+
+The project uses the archive collections exposed by aeon:
+
+```python
+from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026, eeg2026
+
+print(len(multiverse_core))  # 66
+print(len(multiverse2026))   # 133
+print(len(eeg2026))          # 28
+```
+
+`multiverse2026` is the full Multiverse collection. `multiverse_core` is the smaller
+benchmark subset: it is more balanced across applications, removes overly similar,
+very simple and zero-information datasets, and has a useful spread of dataset sizes and
+series lengths. The current benchmark results use this core list unless stated
+otherwise.
+
+The EEG collection is a separate classification archive used for EEG-specific
+experiments. It is based on [aeon-neuro](https://github.com/aeon-toolkit/aeon-neuro).
+
+These lists are Python collections of dataset names, so they can be passed directly to
+experiment or result-loading code. The underlying dataset files are still downloaded
+and cached using `load_classification`, as described above.

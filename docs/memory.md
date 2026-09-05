@@ -18,11 +18,8 @@ in for one.
 ## What is recorded
 
 `tsml-eval` writes one `memory_usage` value per classifier, dataset and resample: the
-peak memory observed during `fit`. It is in the raw prediction files, and this
-repository's ingest brings across only the accuracy-style measures, so it has not been
-carried over.
-
-One number, host side, fit only.
+peak memory observed during `fit`. It is in the raw prediction files, but it is only a
+proxy for the memory footprint of a classifier.
 
 ## Why the figures we hold cannot stand in
 
