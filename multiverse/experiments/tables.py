@@ -344,6 +344,51 @@ def _missing_by_estimator(frames, estimators, common, datasets):
     return missing
 
 
+# Estimators held out of the published tables, with the reason each is held out.
+# They are named on every page rather than quietly dropped, since an unexplained
+# absence is the thing this archive exists to argue against.
+WITHHELD_ESTIMATORS = {
+    "LiteTIME": (
+        "LITE is a univariate architecture. The multivariate variant of the same "
+        "method is listed here as LITETime-MV"
+    ),
+    "FreshPRINCE": (
+        "cannot complete the archive at the memory available: recorded OOM at "
+        "128 GB after eight attempts each on FaceDetection, FordChallenge and "
+        "Skoda, and 38 on Tiselac"
+    ),
+    "1NN-DTW": (
+        "cannot complete the archive within the walltime available: exceeded the "
+        "limit on BIDMC32HR_disc, with no result recorded for BIDMC32SpO2_disc"
+    ),
+    "DisjointCNN-Aeon": (
+        "aeon's implementation applies a Permute after the final block, so its "
+        "pooling reduces the wrong axes and the classifier head receives one "
+        "feature instead of 64 (aeon issue #3775). Held as evidence for that "
+        "issue; the port of the same method reports as DisjointCNN"
+    ),
+}
+
+
+def _withheld_html() -> str:
+    """Name the estimators kept out of the table, and why."""
+    if not WITHHELD_ESTIMATORS:
+        return ""
+    items = "".join(
+        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        for name, reason in WITHHELD_ESTIMATORS.items()
+    )
+    return (
+        "<h2>Estimators not listed</h2>"
+        f'<ul class="missing">{items}</ul>'
+        '<p class="note">Their results remain in the repository under '
+        "<code>results/multiverse/</code>. Removing an estimator that cannot "
+        "finish the archive returns the datasets it alone was missing to every "
+        "other estimator, which is why the scored count above is larger than "
+        "the number of datasets any single run completed.</p>"
+    )
+
+
 def _excluded_html(missing, reasons, common, dropped) -> str:
     """Render a one-line summary of what each estimator is missing."""
     lookup = {
@@ -711,6 +756,7 @@ def leaderboard(
             )
 
     parts.append(_excluded_html(missing, reasons, common, dropped))
+    parts.append(_withheld_html())
     parts.append(
         _snippet_html(
             datasets_expr if datasets_expr is not None else _describe_datasets(datasets),
@@ -1150,20 +1196,23 @@ def main() -> None:
     """Build the Multiverse-core leaderboard.
 
     Uses every estimator with results in the repository, including the Dummy
-    baseline, over the Multiverse-core datasets all of them have results for.
+    baseline, over the Multiverse-core datasets all of them have results for,
+    except those named in WITHHELD_ESTIMATORS. That set is rendered onto every
+    page by _withheld_html, so an omission is stated rather than inferred.
 
-    DisjointCNN-Aeon is held back. Those results are around 20 accuracy points
-    below the authors' published numbers on all 23 shared datasets, because
-    aeon's network applies a Permute after the final block and its pooling then
-    reduces the wrong axes, leaving the classifier head one feature instead of
-    64 (aeon issue #3775). They are kept as evidence for that issue rather than
-    deleted, but listing them would read as a claim about the method. The
-    Multiverse port of the same method reports under DisjointCNN.
+    Three of the four are held back because they cannot finish the archive, and
+    scoring on the intersection makes an estimator's gaps everyone's: LiteTIME
+    is univariate, with LITETime-MV the multivariate variant of the same method,
+    while FreshPRINCE and 1NN-DTW exhaust the available memory and walltime
+    respectively. Removing them returns five datasets to the scored set. The
+    fourth, DisjointCNN-Aeon, completes the archive but scores around 20
+    accuracy points below the published numbers because of aeon issue #3775; it
+    is kept as evidence for that issue, and the port reports as DisjointCNN.
     """
     from aeon.datasets.tsc_datasets import UEA, multiverse_core
 
     datasets = sorted(multiverse_core)
-    estimators = available_estimators(exclude=("DisjointCNN-Aeon",))
+    estimators = available_estimators(exclude=tuple(WITHHELD_ESTIMATORS))
     print(f"estimators: {', '.join(estimators)}")
 
     path = leaderboard(
