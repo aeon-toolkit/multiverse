@@ -65,6 +65,64 @@ def test_ranking_loss_matches_a_hand_computation():
     assert float(_ranking_loss(embeddings, labels, "EU")) == pytest.approx(expected)
 
 
+def _loop_ranking_loss(embeddings, labels, distance):
+    """The authors' loop, kept as the reference the vectorised form must match."""
+    if distance == "Cosine":
+        matrix = -torch.cosine_similarity(
+            embeddings.unsqueeze(1), embeddings.unsqueeze(0), dim=2
+        )
+    else:
+        matrix = torch.cdist(embeddings, embeddings, p=2)
+    same = labels.reshape(1, -1) == labels.reshape(-1, 1)
+    violations = []
+    for anchor in range(matrix.shape[0]):
+        negatives = matrix[anchor][~same[anchor]]
+        if negatives.numel() == 0:
+            continue
+        positives = same[anchor].nonzero().flatten()
+        for positive in positives[positives != anchor]:
+            gap = matrix[anchor, positive]
+            closer = negatives[negatives <= gap]
+            violations.append(torch.sigmoid(gap - closer).sum())
+    if not violations:
+        return None
+    return torch.atan(torch.stack(violations)).mean()
+
+
+@pytest.mark.parametrize("distance", ["EU", "Cosine"])
+@pytest.mark.parametrize("n_labels", [2, 5])
+def test_ranking_loss_matches_the_authors_loop(distance, n_labels):
+    """The dense form is a rewrite for speed, so it must equal the loop exactly.
+
+    Shaped like a real batch: the archive settings give 4 * (2 * 5 + 1) = 44
+    embeddings with every case repeated 11 times.
+    """
+    generator = torch.Generator().manual_seed(3)
+    embeddings = torch.randn(44, 16, generator=generator)
+    labels = torch.randint(0, n_labels, (4,), generator=generator).repeat(11)
+
+    expected = _loop_ranking_loss(embeddings, labels, distance)
+    actual = _ranking_loss(embeddings, labels, distance)
+    if expected is None:
+        assert actual is None
+    else:
+        assert float(actual) == pytest.approx(float(expected), rel=1e-6)
+
+
+def test_ranking_loss_gradient_matches_the_authors_loop():
+    """Equal values are not enough; the training signal must match too."""
+    generator = torch.Generator().manual_seed(5)
+    base = torch.randn(22, 8, generator=generator)
+    labels = torch.tensor([0, 1]).repeat(11)
+
+    grads = []
+    for loss_fn in (_loop_ranking_loss, _ranking_loss):
+        embeddings = base.clone().requires_grad_(True)
+        loss_fn(embeddings, labels, "EU").backward()
+        grads.append(embeddings.grad)
+    assert torch.allclose(grads[0], grads[1], atol=1e-6)
+
+
 def test_ranking_loss_is_none_without_negatives():
     """A single-class batch has nothing to rank, where the original raises."""
     embeddings = torch.tensor([[0.0], [1.0]])
