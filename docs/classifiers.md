@@ -114,14 +114,26 @@ Mathematics, 9(23), 2021.
 This is the only Keras port here, following the authors, so it needs `tensorflow`
 rather than `torch`. Both are in the `deep-learning` extra.
 
-The XCM results in this repository follow the authors' tuning protocol. Section 4.3 sets
+**The XCM results published here are the fixed-parameter run**: a single fit at window
+0.8 with batch 32, not the per-dataset search. The search was run over the full core 66
+and did not pay for itself. Across the 65 shared datasets it was 0.017 mean accuracy
+worse than the single fit, 31 wins to 31 with 3 ties, Wilcoxon p = 0.63. Worse, on the
+14 datasets where the search happened to select 0.8 — the same window as the fixed run,
+so the only difference is initialisation — the two runs still differed by 0.11 mean
+absolute accuracy, and by 0.48 on HouseholdPowerConsumption2_disc and 0.44 on Libras.
+At one resample XCM's run-to-run variance is larger than the effect the search is
+tuning for, which makes the cross-validated selection largely a choice over noise: its
+five per-window scores on Locust2022 run 0.674, 0.888, 0.253, 0.590, 0.707. The tuned
+results are kept out of the tables rather than deleted.
+
+The search itself follows the authors' protocol. Section 4.3 sets
 `window_size` and `batch_size` per dataset "by grid search based on the best average
 accuracy following a stratified 5-fold cross-validation on the training set", over
 windows {0.2, 0.4, 0.6, 0.8, 1.0} and batches {1, 8, 32}. Selection never touches the
 test data.
 
-The reported run searches the window on that grid and holds batch size at 32. That is
-the one departure, and it is a cost decision rather than a modelling one: batch 1 takes
+That search holds batch size at 32 rather than searching it. That is a cost decision
+rather than a modelling one: batch 1 takes
 roughly 32 times the gradient steps, which would turn a day of GPU time into about 900
 hours, for a value the published table selects on 4 of 30 datasets.
 

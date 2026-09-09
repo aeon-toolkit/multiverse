@@ -370,6 +370,38 @@ WITHHELD_ESTIMATORS = {
 }
 
 
+# Estimators listed in the tables that carry a caveat a reader needs in order to
+# read the row correctly. Kept beside WITHHELD_ESTIMATORS so both the inclusions
+# and the exclusions state their reasoning in the same place.
+ESTIMATOR_NOTES = {
+    "XCM": (
+        "run at fixed parameters, a single fit at window 0.8 with batch 32, not "
+        "the per-dataset cross-validated search over window and batch size that "
+        "the paper describes. The search was run and did not pay: across the 65 "
+        "shared datasets it was 0.017 mean accuracy worse, 31 wins to 31 with 3 "
+        "ties, Wilcoxon p = 0.63. On the 14 datasets where the search selected "
+        "0.8, the window used here, the two runs still differed by 0.11 mean "
+        "absolute accuracy and by as much as 0.48, so at one resample XCM's "
+        "run-to-run variance is larger than the effect the search is tuning for"
+    ),
+}
+
+
+def _estimator_notes_html(listed) -> str:
+    """Render the caveats attached to estimators that are in the table."""
+    items = "".join(
+        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        for name, reason in ESTIMATOR_NOTES.items()
+        if name in listed
+    )
+    if not items:
+        return ""
+    return (
+        "<h2>Notes on listed estimators</h2>"
+        f'<ul class="missing">{items}</ul>'
+    )
+
+
 def _withheld_html() -> str:
     """Name the estimators kept out of the table, and why."""
     if not WITHHELD_ESTIMATORS:
@@ -756,6 +788,7 @@ def leaderboard(
             )
 
     parts.append(_excluded_html(missing, reasons, common, dropped))
+    parts.append(_estimator_notes_html(set(summary.index)))
     parts.append(_withheld_html())
     parts.append(
         _snippet_html(
