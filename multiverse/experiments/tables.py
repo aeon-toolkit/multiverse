@@ -370,6 +370,41 @@ WITHHELD_ESTIMATORS = {
 }
 
 
+# Datasets held out of the collection, and why. Distinct from the datasets an
+# individual estimator is missing: these are ones no amount of scheduling will
+# close, so leaving them in the denominator only makes the scored fraction look
+# like a queue that is still draining.
+DEFERRED_DATASETS = {
+    "AustraliaRainfall_disc": (
+        "112186 cases, and three estimators fail on it for reasons compute cannot "
+        "fix. RDST and ROCKET hit LAPACK integer overflow in RidgeClassifierCV's "
+        "SVD, aeon issue 3738, after 14 and 12 attempts; MRHydra exhausted 128 GB "
+        "over 13"
+    ),
+    "PenDigits": (
+        "the series are length 8 and MRHydra requires at least 9, so the dataset "
+        "cannot complete while MRHydra is a column"
+    ),
+}
+
+
+def _deferred_html() -> str:
+    """Name the datasets held out of the collection, and why."""
+    if not DEFERRED_DATASETS:
+        return ""
+    items = "".join(
+        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        for name, reason in DEFERRED_DATASETS.items()
+    )
+    return (
+        "<h2>Datasets not included</h2>"
+        f'<ul class="missing">{items}</ul>'
+        '<p class="note">Held out of the collection rather than reported as '
+        "missing, because no scheduling closes them. Results that do exist for "
+        "them remain in the repository.</p>"
+    )
+
+
 # Estimators listed in the tables that carry a caveat a reader needs in order to
 # read the row correctly. Kept beside WITHHELD_ESTIMATORS so both the inclusions
 # and the exclusions state their reasoning in the same place.
@@ -789,6 +824,7 @@ def leaderboard(
 
     parts.append(_excluded_html(missing, reasons, common, dropped))
     parts.append(_estimator_notes_html(set(summary.index)))
+    parts.append(_deferred_html())
     parts.append(_withheld_html())
     parts.append(
         _snippet_html(
@@ -1244,7 +1280,14 @@ def main() -> None:
     """
     from aeon.datasets.tsc_datasets import UEA, multiverse_core
 
-    datasets = sorted(multiverse_core)
+    # the same deferral applies to both tables: a dataset MRHydra cannot fit
+    # is no more completable inside the UEA 30 than inside Multiverse-core
+    uea_datasets = [name for name in sorted(UEA) if name not in DEFERRED_DATASETS]
+
+    datasets = [
+        name for name in sorted(multiverse_core)
+        if name not in DEFERRED_DATASETS
+    ]
     estimators = available_estimators(exclude=tuple(WITHHELD_ESTIMATORS))
     print(f"estimators: {', '.join(estimators)}")
 
@@ -1269,7 +1312,7 @@ def main() -> None:
     # comparing against the literature actually needs. It is a subset view of
     # the same runs, not a separate experiment.
     uea_path = leaderboard(
-        sorted(UEA),
+        uea_datasets,
         estimators,
         sort_by="accuracy",
         title="UEA leaderboard",
@@ -1279,7 +1322,7 @@ def main() -> None:
 
     docs = Path(__file__).resolve().parents[2] / "docs" / "leaderboard.md"
     uea_table = leaderboard_markdown(
-        sorted(UEA), estimators, sort_by="accuracy", collection="UEA"
+        uea_datasets, estimators, sort_by="accuracy", collection="UEA"
     )
     if write_markdown_table(docs, uea_table, marker="UEA_LEADERBOARD"):
         print(f"updated the UEA table in {docs}")
