@@ -17,7 +17,7 @@ MRHydra,PenDigits,"ValueError: n_timepoints must be >= 9, but found 8",4 attempt
 MRHydra,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ConvolutionBased/output/MRHydra/Tiselac/3983069-1.err
 RDST,AustraliaRainfall_disc,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),14 attempt(s),ShapeletBased/output/RDST/AustraliaRainfall_disc/3983070-1.err
 RDST,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ShapeletBased/output/RDST/Tiselac/3983071-1.err
-RDST,USCActivity,OOM at 64GB,exhausted the top memory tier (64GB),controller report
+RDST,USCActivity,Segmentation fault (core dumped),"Three attempts at 128GB all segfault with no Python traceback, so a C or numba level crash rather than memory. The five earlier attempts at and below 64GB were genuine OOM kills, which is why the controller recorded this as OOM: it classifies a job that vanishes without writing an error as one. 43060 cases; RDST segfaults on exactly one other dataset, PPGDalia_disc, also large-case",ShapeletBased/output/RDST/USCActivity/3983072-1.err
 ROCKET,AustraliaRainfall_disc,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ConvolutionBased/output/ROCKET/AustraliaRainfall_disc/3983073-1.err
 STSF,PenDigits,not recorded,,
 TDE,STEW,cancelled before completion,,controller report
