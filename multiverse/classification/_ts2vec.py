@@ -17,9 +17,11 @@ For the UEA archive the authors evaluate with a support vector machine, chosen
 by grid search over C on the training representations (``train.py`` passes
 ``eval_protocol='svm'``), so that is the default here. Their grid sets
 ``probability=False``, which leaves an ``SVC`` unable to produce probability
-estimates, so this wrapper sets it True: aeon classifiers must implement
-``predict_proba``. That adds Platt scaling, fitted by internal cross-validation
-on the training data only.
+estimates, and aeon classifiers must implement ``predict_proba``. The search
+therefore runs with it off, as theirs does, and the selected C is refitted once
+with it on. Platt scaling is not free: libsvm fits it by an internal five-fold
+cross-validation on every fit, so carrying it through the grid would cost about
+six times the search.
 
 This wrapper is designed for aeon and therefore assumes input X is a 3D NumPy
 array with shape (n_cases, n_channels, n_timepoints). The original expects
