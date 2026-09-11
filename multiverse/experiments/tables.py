@@ -344,6 +344,118 @@ def _missing_by_estimator(frames, estimators, common, datasets):
     return missing
 
 
+# Estimators held out of the published tables, with the reason each is held out.
+# They are named on every page rather than quietly dropped, since an unexplained
+# absence is the thing this archive exists to argue against.
+WITHHELD_ESTIMATORS = {
+    "LiteTIME": (
+        "LITE is a univariate architecture. The multivariate variant of the same "
+        "method is listed here as LITETime-MV"
+    ),
+    "FreshPRINCE": (
+        "cannot complete the archive at the memory available: recorded OOM at "
+        "128 GB after eight attempts each on FaceDetection, FordChallenge and "
+        "Skoda, and 38 on Tiselac"
+    ),
+    "1NN-DTW": (
+        "cannot complete the archive within the walltime available: exceeded the "
+        "limit on BIDMC32HR_disc, with no result recorded for BIDMC32SpO2_disc"
+    ),
+    "DisjointCNN-Aeon": (
+        "aeon's implementation applies a Permute after the final block, so its "
+        "pooling reduces the wrong axes and the classifier head receives one "
+        "feature instead of 64 (aeon issue #3775). Held as evidence for that "
+        "issue; the port of the same method reports as DisjointCNN"
+    ),
+}
+
+
+# Datasets held out of the collection, and why. Distinct from the datasets an
+# individual estimator is missing: these are ones no amount of scheduling will
+# close, so leaving them in the denominator only makes the scored fraction look
+# like a queue that is still draining.
+DEFERRED_DATASETS = {
+    "AustraliaRainfall_disc": (
+        "112186 cases, and three estimators fail on it for reasons compute cannot "
+        "fix. RDST and ROCKET hit LAPACK integer overflow in RidgeClassifierCV's "
+        "SVD, aeon issue 3738, after 14 and 12 attempts; MRHydra exhausted 128 GB "
+        "over 13"
+    ),
+    "PenDigits": (
+        "the series are length 8 and MRHydra requires at least 9, so the dataset "
+        "cannot complete while MRHydra is a column"
+    ),
+}
+
+
+def _deferred_html() -> str:
+    """Name the datasets held out of the collection, and why."""
+    if not DEFERRED_DATASETS:
+        return ""
+    items = "".join(
+        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        for name, reason in DEFERRED_DATASETS.items()
+    )
+    return (
+        "<h2>Datasets not included</h2>"
+        f'<ul class="missing">{items}</ul>'
+        '<p class="note">Held out of the collection rather than reported as '
+        "missing, because no scheduling closes them. Results that do exist for "
+        "them remain in the repository.</p>"
+    )
+
+
+# Estimators listed in the tables that carry a caveat a reader needs in order to
+# read the row correctly. Kept beside WITHHELD_ESTIMATORS so both the inclusions
+# and the exclusions state their reasoning in the same place.
+ESTIMATOR_NOTES = {
+    "XCM": (
+        "run at fixed parameters, a single fit at window 0.8 with batch 32, not "
+        "the per-dataset cross-validated search over window and batch size that "
+        "the paper describes. The search was run and did not pay: across the 65 "
+        "shared datasets it was 0.017 mean accuracy worse, 31 wins to 31 with 3 "
+        "ties, Wilcoxon p = 0.63. On the 14 datasets where the search selected "
+        "0.8, the window used here, the two runs still differed by 0.11 mean "
+        "absolute accuracy and by as much as 0.48, so at one resample XCM's "
+        "run-to-run variance is larger than the effect the search is tuning for"
+    ),
+}
+
+
+def _estimator_notes_html(listed) -> str:
+    """Render the caveats attached to estimators that are in the table."""
+    items = "".join(
+        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        for name, reason in ESTIMATOR_NOTES.items()
+        if name in listed
+    )
+    if not items:
+        return ""
+    return (
+        "<h2>Notes on listed estimators</h2>"
+        f'<ul class="missing">{items}</ul>'
+    )
+
+
+def _withheld_html() -> str:
+    """Name the estimators kept out of the table, and why."""
+    if not WITHHELD_ESTIMATORS:
+        return ""
+    items = "".join(
+        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        for name, reason in WITHHELD_ESTIMATORS.items()
+    )
+    return (
+        "<h2>Estimators not listed</h2>"
+        f'<ul class="missing">{items}</ul>'
+        '<p class="note">Their results remain in the repository under '
+        "<code>results/multiverse/</code>. Removing an estimator that cannot "
+        "finish the archive returns the datasets it alone was missing to every "
+        "other estimator, which is why the scored count above is larger than "
+        "the number of datasets any single run completed.</p>"
+    )
+
+
 def _excluded_html(missing, reasons, common, dropped) -> str:
     """Render a one-line summary of what each estimator is missing."""
     lookup = {
@@ -711,6 +823,9 @@ def leaderboard(
             )
 
     parts.append(_excluded_html(missing, reasons, common, dropped))
+    parts.append(_estimator_notes_html(set(summary.index)))
+    parts.append(_deferred_html())
+    parts.append(_withheld_html())
     parts.append(
         _snippet_html(
             datasets_expr if datasets_expr is not None else _describe_datasets(datasets),
@@ -1150,20 +1265,30 @@ def main() -> None:
     """Build the Multiverse-core leaderboard.
 
     Uses every estimator with results in the repository, including the Dummy
-    baseline, over the Multiverse-core datasets all of them have results for.
+    baseline, over the Multiverse-core datasets all of them have results for,
+    except those named in WITHHELD_ESTIMATORS. That set is rendered onto every
+    page by _withheld_html, so an omission is stated rather than inferred.
 
-    DisjointCNN-Aeon is held back. Those results are around 20 accuracy points
-    below the authors' published numbers on all 23 shared datasets, because
-    aeon's network applies a Permute after the final block and its pooling then
-    reduces the wrong axes, leaving the classifier head one feature instead of
-    64 (aeon issue #3775). They are kept as evidence for that issue rather than
-    deleted, but listing them would read as a claim about the method. The
-    Multiverse port of the same method reports under DisjointCNN.
+    Three of the four are held back because they cannot finish the archive, and
+    scoring on the intersection makes an estimator's gaps everyone's: LiteTIME
+    is univariate, with LITETime-MV the multivariate variant of the same method,
+    while FreshPRINCE and 1NN-DTW exhaust the available memory and walltime
+    respectively. Removing them returns five datasets to the scored set. The
+    fourth, DisjointCNN-Aeon, completes the archive but scores around 20
+    accuracy points below the published numbers because of aeon issue #3775; it
+    is kept as evidence for that issue, and the port reports as DisjointCNN.
     """
     from aeon.datasets.tsc_datasets import UEA, multiverse_core
 
-    datasets = sorted(multiverse_core)
-    estimators = available_estimators(exclude=("DisjointCNN-Aeon",))
+    # the same deferral applies to both tables: a dataset MRHydra cannot fit
+    # is no more completable inside the UEA 30 than inside Multiverse-core
+    uea_datasets = [name for name in sorted(UEA) if name not in DEFERRED_DATASETS]
+
+    datasets = [
+        name for name in sorted(multiverse_core)
+        if name not in DEFERRED_DATASETS
+    ]
+    estimators = available_estimators(exclude=tuple(WITHHELD_ESTIMATORS))
     print(f"estimators: {', '.join(estimators)}")
 
     path = leaderboard(
@@ -1187,7 +1312,7 @@ def main() -> None:
     # comparing against the literature actually needs. It is a subset view of
     # the same runs, not a separate experiment.
     uea_path = leaderboard(
-        sorted(UEA),
+        uea_datasets,
         estimators,
         sort_by="accuracy",
         title="UEA leaderboard",
@@ -1197,7 +1322,7 @@ def main() -> None:
 
     docs = Path(__file__).resolve().parents[2] / "docs" / "leaderboard.md"
     uea_table = leaderboard_markdown(
-        sorted(UEA), estimators, sort_by="accuracy", collection="UEA"
+        uea_datasets, estimators, sort_by="accuracy", collection="UEA"
     )
     if write_markdown_table(docs, uea_table, marker="UEA_LEADERBOARD"):
         print(f"updated the UEA table in {docs}")
