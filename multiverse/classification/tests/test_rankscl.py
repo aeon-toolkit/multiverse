@@ -218,3 +218,27 @@ def test_shape_is_checked_at_predict():
         clf.predict(np.random.random((4, 5, 40)))
     with pytest.raises(ValueError, match="length"):
         clf.predict(np.random.random((4, 2, 17)))
+
+
+def test_svm_grid_does_not_carry_platt_scaling():
+    """The searched estimator must match the authors' probability=False.
+
+    libsvm fits Platt scaling by an internal five-fold cross-validation inside
+    every ``fit``, so carrying probability=True into the grid turns a ten-value
+    search over five folds from about 50 SVC trainings into 300. On the archive
+    collections that alone ran the probe past a 60 hour job.
+    """
+    clf = RankSCLClassifier(probe="svm")
+    clf.n_classes_ = 2
+    assert clf._build_probe(n_cases=100, seed=0).estimator.probability is False
+    assert clf._build_probe(n_cases=10, seed=0).probability is False
+
+
+def test_svm_probe_ends_up_with_probabilities():
+    """predict_proba is part of the aeon interface, so the fitted probe needs it."""
+    X, y = _data(n_cases=60)
+    clf = RankSCLClassifier(**{**SMALL, "probe": "svm"}).fit(X, y)
+    assert clf.probe_.probability is True
+    proba = clf.predict_proba(X)
+    assert proba.shape == (len(y), clf.n_classes_)
+    assert np.allclose(proba.sum(axis=1), 1)

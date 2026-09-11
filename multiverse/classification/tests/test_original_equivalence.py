@@ -674,6 +674,23 @@ def test_ts2vec_svm_probe_matches_the_authors_grid():
     }
 
 
+def test_ts2vec_svm_grid_does_not_carry_platt_scaling():
+    """The searched estimator must match the authors' probability=False.
+
+    libsvm fits Platt scaling by an internal five-fold cross-validation inside
+    every ``fit``, so carrying probability=True into the grid multiplies a
+    ten-value search over five folds from about 50 SVC trainings to 300. The
+    authors set probability=False in their grid and we only need probabilities
+    on the final estimator.
+    """
+    from multiverse.classification import TS2VecClassifier
+
+    clf = TS2VecClassifier(probe="svm")
+    clf.n_classes_ = 2
+    assert clf._build_probe(n_cases=100, seed=0).estimator.probability is False
+    assert clf._build_probe(n_cases=10, seed=0).probability is False
+
+
 # ---------------------------------------------------------------------------
 # XCM
 # ---------------------------------------------------------------------------
