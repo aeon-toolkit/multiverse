@@ -8,8 +8,6 @@ FreshPRINCE,FaceDetection,OOM at 128GB,8 attempt(s),FeatureBased/output/FreshPRI
 FreshPRINCE,FordChallenge,OOM at 128GB,8 attempt(s),FeatureBased/output/FreshPRINCE/FordChallenge/3983063-1.err
 FreshPRINCE,Skoda,OOM at 128GB,8 attempt(s),FeatureBased/output/FreshPRINCE/Skoda/3983064-1.err
 FreshPRINCE,Tiselac,OOM at 128GB,38 attempt(s),FeatureBased/output/FreshPRINCE/Tiselac/3983065-1.err
-HC2,STEW,cancelled before completion,,controller report
-HC2,Tiselac,cancelled before completion,,controller report
 LiteTIME,BIDMC32HR_disc,not recorded,,
 LiteTIME,BIDMC32SpO2_disc,not recorded,,
 MRHydra,AustraliaRainfall_disc,OOM at 128GB,13 attempt(s),ConvolutionBased/output/MRHydra/AustraliaRainfall_disc/3983068-1.err
@@ -20,9 +18,7 @@ RDST,Tiselac,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 37
 RDST,USCActivity,Segmentation fault (core dumped),"Three attempts at 128GB all segfault with no Python traceback, so a C or numba level crash rather than memory. The five earlier attempts at and below 64GB were genuine OOM kills, which is why the controller recorded this as OOM: it classifies a job that vanishes without writing an error as one. 43060 cases; RDST segfaults on exactly one other dataset, PPGDalia_disc, also large-case",ShapeletBased/output/RDST/USCActivity/3983072-1.err
 ROCKET,AustraliaRainfall_disc,LAPACK integer overflow in the RidgeClassifierCV SVD (aeon issue 3738),12 attempt(s),ConvolutionBased/output/ROCKET/AustraliaRainfall_disc/3983073-1.err
 STSF,PenDigits,not recorded,,
-TDE,STEW,cancelled before completion,,controller report
 DisjointCNN-Aeon,EmoPain,ValueError: input collection has too little variation (std <= 1e-07),"Raised by aeon input validation before fit, so it affects any aeon classifier; 2 attempts",DeepLearning/output/DisjointCNN/EmoPain/1476290-1.err
-TimesURL,EmoPain,ValueError: input collection has too little variation (std <= 1e-07),"Inferred, not read from a log: no TimesURL job logs were copied across. aeon raises this before fit for EmoPain, so it stops every aeon classifier, and it is the recorded cause for ConvTran, PatchMTSC and DisjointCNN",
 TS2Vec,AustraliaRainfall_disc,Timed out at 60 hours,"Elapsed 2-12:00:00 against a 2-12:00:00 limit, using about 3 GB, so time rather than memory. The port omitted the authors' MAX_SAMPLES cap on the SVM probe, making the grid search unaffordable on large collections; fixed, and these are rerunnable",DeepLearning/output/TS2Vec/AustraliaRainfall_disc
 TS2Vec,Locust2022,Timed out at 60 hours,"Elapsed 2-12:00:00 against a 2-12:00:00 limit, using about 3 GB, so time rather than memory. The port omitted the authors' MAX_SAMPLES cap on the SVM probe, making the grid search unaffordable on large collections; fixed, and these are rerunnable",DeepLearning/output/TS2Vec/Locust2022
 TS2Vec,Tiselac,Timed out at 60 hours,"Elapsed 2-12:00:00 against a 2-12:00:00 limit, using about 3 GB, so time rather than memory. The port omitted the authors' MAX_SAMPLES cap on the SVM probe, making the grid search unaffordable on large collections; fixed, and these are rerunnable",DeepLearning/output/TS2Vec/Tiselac
