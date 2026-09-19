@@ -32,6 +32,11 @@ __all__ = [
     "available_estimators",
     "load_metric",
     "load_missing_reasons",
+    "paper_datasets",
+    "complete_estimators",
+    "pending_results",
+    "pending_markdown",
+    "eeg_archive_markdown",
 ]
 
 import base64
@@ -44,6 +49,9 @@ import numpy as np
 import pandas as pd
 
 DEFAULT_RESULTS_DIR = Path(__file__).resolve().parents[2] / "results" / "multiverse"
+# Mean scores from the EEG archive study, one file per metric with a column per
+# estimator. A different layout from results/multiverse, so read separately.
+DEFAULT_EEG_ARCHIVE_DIR = DEFAULT_RESULTS_DIR.parent / "eeg"
 
 #: A dataset whose best estimator gains no more than this over the baseline
 #: shows little signal; one whose best reaches SATURATED_BEST is solved.
@@ -361,6 +369,17 @@ WITHHELD_ESTIMATORS = {
         "cannot complete the archive within the walltime available: exceeded the "
         "limit on BIDMC32HR_disc, with no result recorded for BIDMC32SpO2_disc"
     ),
+    "CIF-500": (
+        "the 500-tree configuration run for the Multiverse archive paper's "
+        "full-archive benchmark, where it is reported as CIF. This table reports "
+        "the default CIF; the full-archive leaderboard reports CIF-500"
+    ),
+    "DrCIF-500": (
+        "the 500-tree configuration HC2 uses internally, run for the Multiverse "
+        "archive paper's full-archive benchmark, where it is reported as DrCIF. "
+        "This table reports the default DrCIF; the full-archive leaderboard "
+        "reports DrCIF-500"
+    ),
     "DisjointCNN-Aeon": (
         "aeon's implementation applies a Permute after the final block, so its "
         "pooling reduces the wrong axes and the classifier head receives one "
@@ -456,11 +475,19 @@ def _withheld_html() -> str:
     )
 
 
+def _core_datasets() -> set[str]:
+    """Return Multiverse-core, or an empty set if this aeon does not list it."""
+    from aeon.datasets import tsc_datasets
+
+    return set(getattr(tsc_datasets, "multiverse_core", ()))
+
+
 def _excluded_html(missing, reasons, common, dropped) -> str:
     """Render a one-line summary of what each estimator is missing."""
     lookup = {
         (row.estimator, row.dataset): row.reason for row in reasons.itertuples()
     }
+    core = _core_datasets()
 
     lines = []
     for estimator, gaps in missing.items():
@@ -469,7 +496,15 @@ def _excluded_html(missing, reasons, common, dropped) -> str:
         # group the datasets by reason, preserving the order they appear in
         grouped: dict[str, list[str]] = {}
         for dataset in gaps:
-            reason = lookup.get((estimator, dataset), "reason not recorded")
+            reason = lookup.get((estimator, dataset))
+            if reason is None:
+                # Several estimators were only ever run on Multiverse-core, so a
+                # gap outside it is not a failure and has no log to cite.
+                reason = (
+                    "not run outside Multiverse-core"
+                    if core and dataset not in core
+                    else "reason not recorded"
+                )
             grouped.setdefault(reason, []).append(dataset)
         summary = "; ".join(
             f"{escape(', '.join(names))} ({escape(reason)})"
@@ -527,6 +562,10 @@ def _snippet_html(
         datasets_expr = f"[...]  # {n_datasets} datasets"
     if "multiverse_core" in datasets_expr:
         imports.insert(0, "from aeon.datasets.tsc_datasets import multiverse_core")
+    if "paper_datasets" in datasets_expr:
+        imports[0] = (
+            "from multiverse.experiments.tables import leaderboard, paper_datasets"
+        )
 
     estimator_list = ", ".join(f'"{name}"' for name in estimators)
     metric_list = ", ".join(f'"{name}"' for name in metrics)
@@ -680,6 +719,8 @@ def leaderboard(
     decimals: int = 4,
     max_cd_estimators: int | None = 6,
     datasets_expr: str | None = None,
+    core_sections: bool = True,
+    extra_html: str = "",
 ) -> Path:
     """Write a single-table HTML leaderboard.
 
@@ -736,6 +777,13 @@ def leaderboard(
         How ``datasets`` was written, for the "Reproducing this page" snippet,
         for example ``"sorted(multiverse_core)"``. When None, a well-known aeon
         dataset list is recognised automatically. Only affects that snippet.
+    core_sections : bool, default=True
+        Whether to list the datasets and estimators held out of the
+        Multiverse-core table. Those lists explain the core table's choices, so
+        a page built over another collection turns them off.
+    extra_html : str, default=""
+        HTML placed after the missing-results section, for example
+        :func:`pending_html` output.
 
     Returns
     -------
@@ -823,9 +871,11 @@ def leaderboard(
             )
 
     parts.append(_excluded_html(missing, reasons, common, dropped))
+    parts.append(extra_html)
     parts.append(_estimator_notes_html(set(summary.index)))
-    parts.append(_deferred_html())
-    parts.append(_withheld_html())
+    if core_sections:
+        parts.append(_deferred_html())
+        parts.append(_withheld_html())
     parts.append(
         _snippet_html(
             datasets_expr if datasets_expr is not None else _describe_datasets(datasets),
@@ -1261,6 +1311,199 @@ def dataset_markdown(
     return "\n".join(rows)
 
 
+def paper_datasets(results_dir: Path | str = DEFAULT_RESULTS_DIR) -> list[str]:
+    """Return the 100 datasets of the paper's full-archive comparison.
+
+    These are the Multiverse datasets on which all 17 classifiers in the
+    Multiverse archive paper have a resample-0 result. The list is stored rather
+    than recomputed so the full-archive leaderboard keeps describing the paper's
+    comparison as new results arrive.
+    """
+    path = Path(results_dir) / "paper_datasets.txt"
+    return [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+
+
+def _datasets_with_all_metrics(estimator, results_dir) -> set[str]:
+    """Datasets for which ``estimator`` has a score on every metric it reports."""
+    common = None
+    for metric in METRIC_LABELS:
+        path = Path(results_dir) / estimator / f"{estimator}_{metric}.csv"
+        if not path.is_file():
+            continue
+        scored = set(load_metric(estimator, metric, results_dir).dropna().index)
+        common = scored if common is None else common & scored
+    return common or set()
+
+
+def complete_estimators(
+    datasets,
+    candidates,
+    results_dir: Path | str = DEFAULT_RESULTS_DIR,
+) -> list[str]:
+    """Return the candidates with a result on every dataset, on every metric.
+
+    Parameters
+    ----------
+    datasets : list of str
+        Datasets that must all be present.
+    candidates : list of str
+        Estimator names, matching their results directories.
+    results_dir : Path or str
+        Directory holding one sub-directory per estimator.
+
+    Returns
+    -------
+    list of str
+        The complete candidates, in the order given.
+    """
+    required = set(datasets)
+    return [
+        estimator
+        for estimator in candidates
+        if required <= _datasets_with_all_metrics(estimator, results_dir)
+    ]
+
+
+def pending_results(
+    datasets,
+    estimators,
+    results_dir: Path | str = DEFAULT_RESULTS_DIR,
+) -> pd.DataFrame:
+    """List what each estimator still needs to cover ``datasets``.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per estimator with ``completed``, ``total`` and ``missing``, the
+        datasets it has no complete result for, in the order given. Estimators
+        with nothing missing are left out.
+    """
+    rows = []
+    for estimator in estimators:
+        have = _datasets_with_all_metrics(estimator, results_dir)
+        missing = [name for name in datasets if name not in have]
+        if missing:
+            rows.append(
+                {
+                    "estimator": estimator,
+                    "completed": len(datasets) - len(missing),
+                    "total": len(datasets),
+                    "missing": missing,
+                }
+            )
+    columns = ["estimator", "completed", "total", "missing"]
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return (
+        pd.DataFrame(rows, columns=columns)
+        .sort_values(["completed", "estimator"], ascending=[False, True])
+        .reset_index(drop=True)
+    )
+
+
+def pending_markdown(pending: pd.DataFrame) -> str:
+    """Render :func:`pending_results` as a Markdown table."""
+    if pending.empty:
+        return "Every estimator in the Multiverse-core table has completed these datasets."
+    rows = [
+        "| Estimator | Completed | Missing datasets |",
+        "|---|---|---|",
+    ]
+    for row in pending.itertuples():
+        rows.append(
+            f"| {row.estimator} | {row.completed} of {row.total} | "
+            f"{', '.join(row.missing)} |"
+        )
+    return "\n".join(rows)
+
+
+def pending_html(pending: pd.DataFrame, collection: str) -> str:
+    """Render :func:`pending_results` as a page section."""
+    if pending.empty:
+        return ""
+    items = "".join(
+        f"<li><b>{escape(row.estimator)}</b> &mdash; {row.completed} of "
+        f"{row.total}; missing {escape(', '.join(row.missing))}</li>"
+        for row in pending.itertuples()
+    )
+    return (
+        "<h2>Not yet complete</h2>"
+        f'<p class="note">Estimators in the Multiverse-core table that do not '
+        f"yet have a result on every {escape(collection)} dataset, so are not "
+        "ranked above.</p>"
+        f'<ul class="missing">{items}</ul>'
+    )
+
+
+def write_pending_csv(pending: pd.DataFrame, path: Path | str) -> Path:
+    """Write one ``estimator,dataset`` row per missing result, to queue runs from."""
+    path = Path(path)
+    rows = [
+        (row.estimator, dataset)
+        for row in pending.itertuples()
+        for dataset in row.missing
+    ]
+    pd.DataFrame(rows, columns=["estimator", "dataset"]).to_csv(path, index=False)
+    return path
+
+
+def eeg_archive_markdown(
+    archive_dir: Path | str = DEFAULT_EEG_ARCHIVE_DIR,
+    decimals: int = 4,
+) -> str:
+    """Return the EEG archive study's mean results as a Markdown leaderboard.
+
+    ``results/eeg`` holds one file per metric, ``<metric>_mean.csv``, with a row
+    per dataset and a column per estimator. Estimators are ranked on accuracy
+    over the datasets every one of them has a result for.
+    """
+    archive_dir = Path(archive_dir)
+    labels = {"accuracy": "Accuracy", "balacc": "Balanced accuracy"}
+    frames = {
+        metric: pd.read_csv(archive_dir / f"{metric}_mean.csv", index_col=0)
+        for metric in labels
+        if (archive_dir / f"{metric}_mean.csv").is_file()
+    }
+    if "accuracy" not in frames:
+        raise FileNotFoundError(f"no accuracy_mean.csv in {archive_dir}")
+    common = frames["accuracy"].dropna().index
+    for frame in frames.values():
+        common = common.intersection(frame.dropna().index)
+    frames = {metric: frame.loc[common] for metric, frame in frames.items()}
+
+    ranks = frames["accuracy"].rank(axis=1, ascending=False).mean()
+    order = ranks.sort_values().index
+    means = {metric: frame.mean() for metric, frame in frames.items()}
+    best = {metric: values.max() for metric, values in means.items()}
+
+    header = ["#", "Estimator", "Accuracy rank"] + [labels[m] for m in frames]
+    rows = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    for position, estimator in enumerate(order, 1):
+        rank = ranks[estimator]
+        cells = [
+            str(position),
+            estimator,
+            f"**{rank:.2f}**" if np.isclose(rank, ranks.min()) else f"{rank:.2f}",
+        ]
+        for metric in frames:
+            text = f"{means[metric][estimator]:.{decimals}f}"
+            cells.append(
+                f"**{text}**" if np.isclose(means[metric][estimator], best[metric])
+                else text
+            )
+        rows.append("| " + " | ".join(cells) + " |")
+    rows.append("")
+    rows.append(
+        f"Average over the {len(common)} datasets in `results/eeg`, ordered by average "
+        "accuracy rank. Best in each column in bold."
+    )
+    return "\n".join(rows)
+
+
 def main() -> None:
     """Build the Multiverse-core leaderboard.
 
@@ -1335,6 +1578,88 @@ def main() -> None:
         print(f"updated the table in {readme}")
     else:
         print(f"no LEADERBOARD markers in {readme}; Markdown table not written")
+
+    _collection_pages(
+        datasets=paper_datasets(),
+        core_estimators=estimators,
+        name="full",
+        title="Multiverse leaderboard: the paper's 100 datasets",
+        collection="paper",
+        datasets_expr="paper_datasets()",
+    )
+
+    from aeon.datasets.tsc_datasets import eeg2026, multiverse2026
+
+    # The EEG archive's two univariate problems are not part of the Multiverse,
+    # so no Multiverse run covers them.
+    _collection_pages(
+        datasets=sorted(set(eeg2026) & set(multiverse2026)),
+        core_estimators=estimators,
+        name="eeg",
+        title="EEG leaderboard",
+        collection="EEG",
+        datasets_expr="sorted(set(eeg2026) & set(multiverse2026))",
+    )
+    docs = Path(__file__).resolve().parents[2] / "docs" / "leaderboard_eeg.md"
+    if write_markdown_table(docs, eeg_archive_markdown(), marker="EEG_ARCHIVE"):
+        print(f"updated the EEG archive table in {docs}")
+
+
+def _collection_pages(
+    datasets, core_estimators, name, title, collection, datasets_expr
+) -> None:
+    """Build the leaderboard pages for a collection other than Multiverse-core.
+
+    Ranks every estimator with a result on all of ``datasets``, which can include
+    ones held out of the core table, then lists the core-table estimators that
+    are not there yet. Writes ``leaderboard_<name>.html``, ``pending_<name>.csv``
+    and the ``<NAME>_LEADERBOARD`` and ``<NAME>_PENDING`` blocks of
+    ``docs/leaderboard_<name>.md``.
+    """
+    # LiteTIME is univariate and DisjointCNN-Aeon is known to be broken, so
+    # neither belongs in any table; the others withheld from the core table are
+    # withheld only because they cannot finish it.
+    unsuitable = {"LiteTIME", "DisjointCNN-Aeon"}
+    candidates = [
+        estimator
+        for estimator in available_estimators()
+        if estimator not in unsuitable
+    ]
+    complete = complete_estimators(datasets, candidates)
+    pending = pending_results(
+        datasets, [e for e in core_estimators if e not in complete]
+    )
+    print(
+        f"{name}: {len(complete)} estimators complete on {len(datasets)} datasets, "
+        f"{len(pending)} core-table estimators pending"
+    )
+
+    path = leaderboard(
+        datasets,
+        complete,
+        sort_by="accuracy",
+        title=title,
+        output_path=Path(DEFAULT_RESULTS_DIR) / f"leaderboard_{name}.html",
+        datasets_expr=datasets_expr,
+        core_sections=False,
+        extra_html=pending_html(pending, collection),
+    )
+    print(f"wrote {path}")
+    csv_path = write_pending_csv(
+        pending, Path(DEFAULT_RESULTS_DIR) / f"pending_{name}.csv"
+    )
+    print(f"wrote {csv_path}")
+
+    docs = Path(__file__).resolve().parents[2] / "docs" / f"leaderboard_{name}.md"
+    table = leaderboard_markdown(
+        datasets, complete, sort_by="accuracy", collection=collection
+    )
+    marker = name.upper()
+    if write_markdown_table(docs, table, marker=f"{marker}_LEADERBOARD"):
+        write_markdown_table(docs, pending_markdown(pending), marker=f"{marker}_PENDING")
+        print(f"updated {docs}")
+    else:
+        print(f"no {marker}_LEADERBOARD markers in {docs}; Markdown not written")
 
 
 if __name__ == "__main__":

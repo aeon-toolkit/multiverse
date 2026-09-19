@@ -18,6 +18,10 @@ The **Multiverse** is an expanded archive for multivariate time series classific
 datasets from the original UEA MTSC archive, newer MTSC collections, donated 
 standalone datasets, and associated benchmark results into a single open repository.
 
+**Leaderboards:** [Multiverse-core](#multiverse-core-leaderboard) (66 datasets) ·
+[Full archive](docs/leaderboard_full.md) (the paper's 100 datasets) ·
+[EEG](docs/leaderboard_eeg.md) (26 datasets)
+
 The archive is described in
 [The Multiverse of Time Series Machine Learning: an Archive for Multivariate Time Series
 Classification](https://arxiv.org/abs/2603.20352) (arXiv:2603.20352). If you use the
