@@ -69,6 +69,13 @@ The current paper version describes:
 Average over the 58 Multiverse-core datasets with results for every estimator on every metric, ordered by average accuracy rank. Best in each column in bold.
 <!-- LEADERBOARD:END -->
 
+Two more leaderboards are on their own pages:
+
+- [Full archive](docs/leaderboard_full.md): the 100 datasets of the paper's full-archive
+  comparison, with the core-table estimators that have yet to finish them.
+- [EEG](docs/leaderboard_eeg.md): the 26 multivariate EEG datasets, with the EEG archive
+  study's results alongside.
+
 Rebuilt with `python -m multiverse.experiments.tables`, which also writes a sortable
 version with per-metric ranks to
 [`results/multiverse/leaderboard.html`](results/multiverse/leaderboard.html)

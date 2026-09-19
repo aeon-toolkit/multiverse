@@ -99,3 +99,34 @@ def test_ingest_output_is_readable_by_the_leaderboard(predictions, tmp_path, mon
     assert series.name == "Alice"
     assert list(series.index) == ["d1", "d2"]
     assert series["d1"] == pytest.approx(1.0)
+
+
+def test_ingest_scores_a_test_split_missing_a_class(tmp_path, monkeypatch):
+    """Three classes trained, two in the test split: log loss and AUROC still score.
+
+    tsml-eval raises on such a file; ingest falls back to computing those two
+    metrics with the full label set.
+    """
+    from tsml_eval.evaluation.storage import ClassifierResults
+
+    labels = np.array([0, 0, 1, 1])
+    probabilities = np.array(
+        [[0.8, 0.1, 0.1], [0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.3, 0.6, 0.1]]
+    )
+    results = ClassifierResults(
+        dataset_name="d1", classifier_name="Alice", split="TEST", resample_id=0,
+        n_classes=3, class_labels=labels, predictions=probabilities.argmax(axis=1),
+        probabilities=probabilities, fit_time=1.0, predict_time=1.0,
+    )
+    directory = tmp_path / "Alice" / "Predictions" / "d1"
+    directory.mkdir(parents=True)
+    results.save_to_file(str(directory) + "/")
+
+    out = tmp_path / "out"
+    monkeypatch.setattr(ingest_module, "results_path", out)
+    assert ingest("Alice", tmp_path, datasets=["d1"]) == ["d1"]
+
+    auroc = pd.read_csv(out / "Alice" / "Alice_auroc.csv", index_col=0).iloc[0, 0]
+    logloss = pd.read_csv(out / "Alice" / "Alice_logloss.csv", index_col=0).iloc[0, 0]
+    assert auroc == pytest.approx(1.0)
+    assert np.isfinite(logloss) and logloss > 0

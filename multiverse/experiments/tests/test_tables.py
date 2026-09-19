@@ -12,6 +12,7 @@ from multiverse.experiments.tables import (
     LOWER_IS_BETTER,
     METRIC_LABELS,
     available_estimators,
+    complete_estimators,
     dataset_markdown,
     dataset_page,
     dataset_summary,
@@ -19,6 +20,10 @@ from multiverse.experiments.tables import (
     leaderboard_markdown,
     load_metric,
     load_missing_reasons,
+    eeg_archive_markdown,
+    paper_datasets,
+    pending_markdown,
+    pending_results,
     write_markdown_table,
 )
 
@@ -293,3 +298,67 @@ def test_dataset_markdown_marks_the_best(results_dir):
     assert "| d1 |" in table
     assert "**0.9000**" in table
     assert "Alice" in table
+
+
+def test_complete_estimators_needs_every_dataset(results_dir):
+    """Carol lacks d3, so she is complete on d1 and d2 but not on all three."""
+    assert complete_estimators(["d1", "d2", "d3"], ["Alice", "Bob", "Carol"], results_dir) == [
+        "Alice",
+        "Bob",
+    ]
+    assert complete_estimators(["d1", "d2"], ["Alice", "Carol"], results_dir) == [
+        "Alice",
+        "Carol",
+    ]
+
+
+def test_pending_results_lists_the_gaps(results_dir):
+    pending = pending_results(["d1", "d2", "d3"], ["Alice", "Carol"], results_dir)
+
+    assert list(pending["estimator"]) == ["Carol"]
+    row = pending.iloc[0]
+    assert (row["completed"], row["total"], row["missing"]) == (2, 3, ["d3"])
+    assert "| Carol | 2 of 3 | d3 |" in pending_markdown(pending)
+
+
+def test_pending_results_empty_when_all_complete(results_dir):
+    pending = pending_results(["d1", "d2"], ["Alice", "Bob"], results_dir)
+
+    assert pending.empty
+    assert "Every estimator" in pending_markdown(pending)
+
+
+def test_core_sections_can_be_left_out(results_dir, tmp_path):
+    """A page over another collection omits the core table's held-out lists."""
+    with_core = leaderboard(
+        ["d1", "d2"], ["Alice", "Bob"], results_dir=results_dir,
+        output_path=tmp_path / "with.html",
+    ).read_text(encoding="utf-8")
+    without = leaderboard(
+        ["d1", "d2"], ["Alice", "Bob"], results_dir=results_dir,
+        output_path=tmp_path / "without.html", core_sections=False,
+        extra_html="<h2>Extra section</h2>",
+    ).read_text(encoding="utf-8")
+
+    assert "Estimators not listed" in with_core
+    assert "Estimators not listed" not in without
+    assert "Extra section" in without
+
+
+def test_paper_datasets_skips_comments(tmp_path):
+    (tmp_path / "paper_datasets.txt").write_text("# header\nd1\n\nd2\n", encoding="utf-8")
+
+    assert paper_datasets(tmp_path) == ["d1", "d2"]
+
+
+def test_eeg_archive_markdown_ranks_on_accuracy(tmp_path):
+    frame = pd.DataFrame(
+        {"A": [0.9, 0.8], "B": [0.5, 0.6]}, index=pd.Index(["e1", "e2"], name="Estimators:")
+    )
+    frame.to_csv(tmp_path / "accuracy_mean.csv")
+    frame.to_csv(tmp_path / "balacc_mean.csv")
+
+    table = eeg_archive_markdown(tmp_path)
+
+    assert table.splitlines()[2].startswith("| 1 | A | **1.00** |")
+    assert "Average over the 2 datasets" in table

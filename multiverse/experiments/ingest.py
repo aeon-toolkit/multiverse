@@ -20,6 +20,7 @@ Edit the settings in main and run it with
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from aeon.datasets.tsc_datasets import multiverse_core
 from tsml_eval.evaluation.storage import load_classifier_results
@@ -38,6 +39,40 @@ metrics = {
 results_path = Path(__file__).resolve().parents[2] / "results" / "multiverse"
 
 
+def _load_results(path):
+    """Load one prediction file with its statistics calculated by tsml-eval.
+
+    tsml-eval cannot score a test split that is missing a class the model was
+    trained on: log loss and the one-vs-rest AUROC both expect a probability
+    column per class present, so they raise. Several archive problems split this
+    way, the KERAAL multiclass datasets among them. For those the two metrics are
+    computed here with the full label set given explicitly: log loss over every
+    class, and AUROC as the prevalence-weighted one-vs-rest average over the
+    classes present, which is what tsml-eval computes when every class is present.
+    Every other metric is tsml-eval's own.
+    """
+    from sklearn.metrics import log_loss, roc_auc_score
+
+    try:
+        return load_classifier_results(str(path))
+    except ValueError:
+        results = load_classifier_results(str(path), calculate_stats=False)
+        # stored as floats, but they are the column indices of the probabilities
+        labels = np.asarray(results.class_labels).astype(int)
+        probabilities = np.clip(np.asarray(results.probabilities), 0.0, 1.0)
+        n_classes = probabilities.shape[1]
+        results.log_loss = log_loss(labels, probabilities, labels=list(range(n_classes)))
+        present = np.unique(labels)
+        results.auroc_score = float(
+            np.average(
+                [roc_auc_score(labels == c, probabilities[:, c]) for c in present],
+                weights=[np.sum(labels == c) for c in present],
+            )
+        )
+        results.calculate_statistics()
+        return results
+
+
 def ingest(classifier, predictions_path, datasets=None, resample=0):
     """Write one file per metric for a classifier, and return the datasets used.
 
@@ -51,10 +86,7 @@ def ingest(classifier, predictions_path, datasets=None, resample=0):
 
     scores = {name: [] for name in metrics}
     for dataset in found:
-        results = load_classifier_results(
-            str(predictions / dataset / f"testResample{resample}.csv")
-        )
-        results.calculate_statistics()
+        results = _load_results(predictions / dataset / f"testResample{resample}.csv")
         for name, attribute in metrics.items():
             scores[name].append(getattr(results, attribute))
 
