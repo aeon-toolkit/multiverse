@@ -412,6 +412,12 @@ DEFERRED_DATASETS = {
         "the series are length 8 and MRHydra requires at least 9, so the dataset "
         "cannot complete while MRHydra is a column"
     ),
+    "InsectWingbeat": (
+        "25,000 training cases of 200 channels. Only the Dummy baseline has a "
+        "result on it: none of the classifiers in the Multiverse archive paper "
+        "finished it within the resource limits there, so it cannot enter a "
+        "table that needs every estimator"
+    ),
     "BenzeneConcentration_disc": (
         "removed from Multiverse-core. The results here are on version 1, whose "
         "PT08.S2 channel is a deterministic function of the target; version 2 "
