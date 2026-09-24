@@ -23,6 +23,8 @@ CharacterTrajectories,0.5
 CounterMovementJump,0.5
 Cricket,0.5
 CrowdSourced,0.5
+DREAMERA,0.5
+DREAMERV,0.5
 DuckDuckGeese,0.5
 ERing,0.5
 EigenWorms,0.5
@@ -53,6 +55,7 @@ IRDS-STR,0.5
 ImaginedFeetHands,0.5
 ImaginedOpenCloseFist,0.5
 InnerSpeech,0.5
+InsectWingbeat,0.5
 JapaneseVowels,0.5
 KERAAL-CTK,0.5
 KERAAL-CTK-MC,0.5
@@ -70,6 +73,7 @@ KINECAL-GGFV,0.5
 KINECAL-QSEC,0.5
 KINECAL-QSEO,0.5
 LSST,0.5
+LenDB,0.5
 Libras,0.5
 LiveFuelMoistureContent_disc,0.5
 Locust2022,0.5
@@ -92,6 +96,10 @@ PhonemeSpectra,0.5
 PhotoStimulation,0.5
 PronouncedSpeech,0.5
 RacketSports,0.5
+S2Agri-10pc-17,0.5
+S2Agri-10pc-34,0.5
+S2Agri-17,0.5
+S2Agri-34,0.5
 SPHERE-WUS,0.5
 STEW,0.5
 SelfRegulationSCP1,0.5
