@@ -58,8 +58,9 @@ datasets, so are not ranked above. The same gaps are in
 ## EEG archive study results
 
 These are the averaged results held in [`results/eeg`](../results/eeg), for twelve
-estimators including the EEG-specific CSP-SVM, R-KNN and R-MDM. They come from a separate
-study, not the resample-0 runs above, so the two tables are not directly comparable.
+estimators including the EEG-specific CSP-SVM, R-KNN and R-MDM. They come from the
+[EEG archive paper](https://openreview.net/pdf?id=oPQpQlsfD0), not the resample-0 runs
+above, so the two tables are not directly comparable.
 Their 26 datasets also differ: they include the univariate Sleep and leave out
 FeedbackButton.
 

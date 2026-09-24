@@ -41,6 +41,7 @@ __all__ = [
 
 import base64
 import io
+import re
 from datetime import date
 from html import escape
 from pathlib import Path
@@ -369,6 +370,13 @@ WITHHELD_ESTIMATORS = {
         "cannot complete the archive within the walltime available: exceeded the "
         "limit on BIDMC32HR_disc, with no result recorded for BIDMC32SpO2_disc"
     ),
+    "MUSE": (
+        "cannot complete the archive as implemented: on STEW and Skoda its word "
+        "bag outgrows the 32-bit sparse indices scikit-learn's classifier "
+        "accepts, which no memory allocation fixes, and on USCActivity its chi2 "
+        "selection needs 287 GiB. MotorImagery exhausted 16 GB and awaits a "
+        "rerun at the configuration of its other results"
+    ),
     "CIF-500": (
         "the 500-tree configuration run for the Multiverse archive paper's "
         "full-archive benchmark, where it is reported as CIF. This table reports "
@@ -392,7 +400,7 @@ WITHHELD_ESTIMATORS = {
 # Datasets held out of the collection, and why. Distinct from the datasets an
 # individual estimator is missing: these are ones no amount of scheduling will
 # close, so leaving them in the denominator only makes the scored fraction look
-# like a queue that is still draining.
+# like a queue that is still draining. A URL in a reason is rendered as a link.
 DEFERRED_DATASETS = {
     "AustraliaRainfall_disc": (
         "112186 cases, and three estimators fail on it for reasons compute cannot "
@@ -404,7 +412,18 @@ DEFERRED_DATASETS = {
         "the series are length 8 and MRHydra requires at least 9, so the dataset "
         "cannot complete while MRHydra is a column"
     ),
+    "BenzeneConcentration_disc": (
+        "removed from Multiverse-core. The results here are on version 1, whose "
+        "PT08.S2 channel is a deterministic function of the target; version 2 "
+        "drops it, on the advice of the original UCI Air Quality donors: "
+        "https://zenodo.org/records/21871727"
+    ),
 }
+
+
+def _link_urls(text: str) -> str:
+    """Turn each https URL in already escaped text into a link."""
+    return re.sub(r"(https://[^\s<]+)", r'<a href="\1">\1</a>', text)
 
 
 def _deferred_html() -> str:
@@ -412,7 +431,7 @@ def _deferred_html() -> str:
     if not DEFERRED_DATASETS:
         return ""
     items = "".join(
-        f"<li><b>{escape(name)}</b> &mdash; {escape(reason)}.</li>"
+        f"<li><b>{escape(name)}</b> &mdash; {_link_urls(escape(reason))}.</li>"
         for name, reason in DEFERRED_DATASETS.items()
     )
     return (

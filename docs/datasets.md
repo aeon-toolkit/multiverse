@@ -83,7 +83,7 @@ The project uses the archive collections exposed by aeon:
 ```python
 from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026, eeg2026
 
-print(len(multiverse_core))  # 66
+print(len(multiverse_core))  # 65
 print(len(multiverse2026))   # 133
 print(len(eeg2026))          # 28
 ```
@@ -93,6 +93,11 @@ benchmark subset: it is more balanced across applications, removes overly simila
 very simple and zero-information datasets, and has a useful spread of dataset sizes and
 series lengths. The current benchmark results use this core list unless stated
 otherwise.
+
+BenzeneConcentration_disc has been removed from Multiverse-core, since the version the
+results were run on has a channel that is a deterministic function of the target
+([version 2](https://zenodo.org/records/21871727) drops it). aeon versions that
+predate the change still list it, and 66 datasets. It stays in `multiverse2026`.
 
 The EEG collection is a separate classification archive used for EEG-specific
 experiments. It is based on [aeon-neuro](https://github.com/aeon-toolkit/aeon-neuro).

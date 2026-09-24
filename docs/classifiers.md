@@ -260,14 +260,17 @@ It also seeds from ``random_state`` directly rather than through
 ``check_random_state``; that one is not a fidelity constraint, since TSLib simply sets a
 global seed in ``run.py``, and it could be unified with the other two ports.
 
-TimesNet reproduces TSLib's learning rate schedule, which the classification loop
-applies every five epochs. With the default ``lr_adjust="type1"`` the rate becomes
-``learning_rate * 0.5 ** (epoch - 1)`` at epochs 5, 10, 15 and so on, so from the
-published ``learning_rate=0.001`` it falls to 6.3e-5 by epoch 5 and 6.1e-8 by epoch 15:
-over a default 30 epoch run the model is effectively frozen well before the end. Pass
-``lr_adjust=None`` to train at a constant rate instead. Omitting this schedule, as
-earlier versions of this port did, is a materially different optimisation and makes
-results incomparable with the published ones.
+TimesNet trains at a constant learning rate by default, ``lr_adjust=None``, which
+departs from TSLib. TSLib defaults to ``lradj="type1"``, applied every five epochs: the
+rate becomes ``learning_rate * 0.5 ** (epoch - 1)`` at epochs 5, 10, 15 and so on, so
+from the published ``learning_rate=0.001`` it falls to 6.3e-5 by epoch 5 and 6.1e-8 by
+epoch 15, and over a 30 epoch run the model is effectively frozen well before the end.
+That is harmless in TSLib only because it selects the retained epoch on the test set,
+keeping an early epoch from before the collapse. This port selects on a held-out split
+of the training data, so with the schedule on it keeps a model that has stopped
+learning: on ERing, 0.933 without the schedule against 0.578 with it, at otherwise
+identical settings. Pass ``lr_adjust="type1"`` to reproduce TSLib. The published
+TimesNet results here are from the default, constant rate.
 
 ### Equivalence testing
 
